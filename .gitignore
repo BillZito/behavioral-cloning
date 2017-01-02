@@ -1,3 +1,5 @@
 IMG
 driving_log.csv
-images.npy
+center_images.npy
+angles.npy
+steering_angle*

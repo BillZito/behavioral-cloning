@@ -1,8 +1,14 @@
+'''
+Trains model for determining steering angle
+'''
 import os
+import csv
+import json
 import random
 import argparse
 import numpy as np
 from scipy import misc
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from keras.models import Sequential
@@ -32,24 +38,48 @@ def show_images():
 # show_images()
 # plt.show()
 
+
 '''
 save all images to file
 '''
 def save_images():
   #add each to img_combo
   for img_name in img_list:
-    if not img_name.startswith('.'):
+    if img_name.startswith('center'):
       img = misc.imread(img_dir + '/' + img_name)
       img_combo.append(img)
     
   #cast to numpy array and save to file
-  all_images = np.array(img_combo)
-  print('all_images shape is', all_images.shape)
-  np.save('images.npy', all_images)
+  all_center_images = np.array(img_combo)
+  print('all_images shape is', all_center_images.shape)
+  np.save('center_images.npy', all_center_images)
 
 # save_images()
-test = np.load('images.npy')
-print('test.shape', test.shape)
+# test = np.load('images.npy')
+# print('test.shape', test.shape)
+
+
+'''
+save csv contents to a file
+'''
+def save_csv():
+  reader = csv.reader(open('driving_log.csv'), delimiter=',')
+  
+  # split the first value based on value right after center
+  all_angles = []
+  for row in reader: 
+    # title = row[0].split('center_')[1]
+    # print('newval', title)
+    steering_angle = row[3]
+    all_angles.append(steering_angle)
+
+  np_angles = np.array(all_angles)
+  print('all angles', np_angles.shape)
+  np.save('angles.npy', np_angles)
+
+# save_csv()
+
+
 '''
 create a model to train the img data with
 *why need time_len = 1?
@@ -95,24 +125,43 @@ def make_model(time_len=1):
 
 
 
-# if __name == "__main__":
-#   # set up arg parser so that we can call python file with diff args
-#   parser = argparse.ArgumentParser(description='Model to train steering angles')
-#   #didn't include port options since dont need to run on server
-#   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-#   parser.add_argument('--epoch', type=int, default=19, help='Number of epochs.')
-#   parser.add_argument('--epochsize', type=int, default=10000, help='How many frames per epoch.')
-#   #confused by help--just skips validation when fit model right?
-#   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-#   parser.set_defaults(skipvalidate=False)
-#   parser.set_defaults(loadweights=False)
-#   args = parser.parse_args()
+if __name__ == "__main__":
+  # set up arg parser so that we can call python file with diff args
+  parser = argparse.ArgumentParser(description='Model to train steering angles')
+  #didn't include port options since dont need to run on server
+  parser.add_argument('--batch', type=int, default=128, help='Batch size.')
+  parser.add_argument('--epoch', type=int, default=2, help='Number of epochs.')
+  #initially set to 10k but since I only have 7k photos, set to 7k
+  parser.add_argument('--epochsize', type=int, default=7000, help='How many frames per epoch.')
+  #confused by help--just skips validation when fit model right?
+  parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
+  parser.set_defaults(skipvalidate=False)
+  parser.set_defaults(loadweights=False)
+  args = parser.parse_args()
 
-#   model = make_model()
-#   print('model is', model)
+  model = make_model()
+  # print('model is', model)
 
-#   #try to fit model normally without generator... 
-#   model.fit(nb_epcoh=args.epoch)
+  orig_features = np.load('center_images.npy')
+  # print('orig features shape', orig_features.shape)
+  # change channels to be in right place
+  orig_features = np.moveaxis(orig_features, 3, 1)
+  # print('after axis move', orig_features.shape)
 
-#   #if haven't saved ouput yet, save now
-#   #turn to json
+  orig_labels = np.load('angles.npy')
+  X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.2, random_state=0)
+  print('X_train and y_train', X_train.shape, y_train.shape)
+
+  print('X_val and y_val', X_val.shape, y_val.shape)
+  #try to fit model normally without generator... 
+  model.fit(X_train, y_train, nb_epoch=args.epoch, batch_size=args.batch, shuffle=True, validation_data=(X_val, y_val))
+
+  print('model successfully fit...', model)
+
+  #save the model
+  model.save_weights('./steering_angle.keras', True)
+  with open('./steering_angle.json', 'w') as outfile: 
+    json.dump(model.to_json(), outfile)
+
+  #if haven't saved ouput yet, save now
+  #turn to json

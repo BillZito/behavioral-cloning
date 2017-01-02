@@ -16,14 +16,16 @@ from io import BytesIO
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
 
-
+#set up socketio connection (to send info to driving simulator?)
 sio = socketio.Server()
 app = Flask(__name__)
 model = None
 prev_image_array = None
 
+#telemetry isn't set anywhere--assuming this is called by simulator
 @sio.on('telemetry')
 def telemetry(sid, data):
+    print('something is happening')
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
