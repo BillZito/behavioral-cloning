@@ -23,6 +23,7 @@ model = None
 prev_image_array = None
 
 #telemetry isn't set anywhere--assuming this is called by simulator
+#and therefore sid and data are based in by processor
 @sio.on('telemetry')
 def telemetry(sid, data):
     print('something is happening')
@@ -36,24 +37,33 @@ def telemetry(sid, data):
     imgString = data["image"]
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
-    image_array = image_array[40:140,:]
-    #image_array = cv2.resize(image_array,(160,50))
-    image_array = cv2.resize(image_array,(80,25))
-    image_array = image_array/255.0
+    image_array = np.array([image_array])
+    print('image array shape is initally', image_array.shape)
+    image_array = np.moveaxis(image_array, 3, 1)
+    print('after moveaxis', image_array.shape)
 
-    transformed_image_array = image_array[None, :, :, :]
+    #resizing to the size that he wants... taht seems wrong
+    # image_array = image_array[40:140,:]
+    #image_array = cv2.resize(image_array,(160,50))
+    # image_array = cv2.resize(image_array,(80,25))
+    # image_array = image_array/255.0
+    # transformed_image_array = image_array[None, :, :, :]
+
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
-    steering_angle = float(model.predict(transformed_image_array, batch_size=1))
-    throttle = .10
+    #changed from transformed image array since I do it myself... does our model predict doing the same things we defined?
+    steering_angle = float(model.predict(image_array, batch_size=1))
+
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
+    throttle = .10
     send_control(steering_angle, throttle)
 
-
+#making a connection
 @sio.on('connect')
 def connect(sid, environ):
     print("connect ", sid)
     send_control(0, 0)
 
+#send control sets the steering angle and throttle based on start
 def send_control(steering_angle, throttle):
     sio.emit("steer", data={
     'steering_angle': steering_angle.__str__(),
@@ -62,15 +72,20 @@ def send_control(steering_angle, throttle):
 
 
 if __name__ == '__main__':
+    #finding model path
     parser = argparse.ArgumentParser(description='Remote Driving')
     parser.add_argument('model', type=str,
     help='Path to model definition json. Model weights should be on the same path.')
     args = parser.parse_args()
+    #opening the model with read-- this should work for my model
     with open(args.model, 'r') as jfile:
         model = model_from_json(json.load(jfile))
 
+    #compiling model.. i shouldnt need to do that again right?
     model.compile("adam", "mse")
+    #weights file doesnt exist yet... google this
     weights_file = args.model.replace('json', 'h5')
+    #load weights into model
     model.load_weights(weights_file)
     #model.summary()
 

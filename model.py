@@ -130,7 +130,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=2, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=1, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
   parser.add_argument('--epochsize', type=int, default=7000, help='How many frames per epoch.')
   #confused by help--just skips validation when fit model right?
@@ -159,7 +159,7 @@ if __name__ == "__main__":
   print('model successfully fit...', model)
 
   #save the model
-  model.save_weights('./steering_angle.keras', True)
+  model.save_weights('./steering_angle.h5', True)
   with open('./steering_angle.json', 'w') as outfile: 
     json.dump(model.to_json(), outfile)
 
