@@ -1,7 +1,6 @@
 import argparse
 import base64
 import json
-import cv2
 
 import numpy as np
 import socketio
@@ -26,7 +25,6 @@ prev_image_array = None
 #and therefore sid and data are based in by processor
 @sio.on('telemetry')
 def telemetry(sid, data):
-    print('something is happening')
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
@@ -38,16 +36,7 @@ def telemetry(sid, data):
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
     image_array = np.array([image_array])
-    print('image array shape is initally', image_array.shape)
     image_array = np.moveaxis(image_array, 3, 1)
-    print('after moveaxis', image_array.shape)
-
-    #resizing to the size that he wants... taht seems wrong
-    # image_array = image_array[40:140,:]
-    #image_array = cv2.resize(image_array,(160,50))
-    # image_array = cv2.resize(image_array,(80,25))
-    # image_array = image_array/255.0
-    # transformed_image_array = image_array[None, :, :, :]
 
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     #changed from transformed image array since I do it myself... does our model predict doing the same things we defined?
