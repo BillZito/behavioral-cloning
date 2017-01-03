@@ -6,8 +6,8 @@ from scipy import misc
 import matplotlib.pyplot as plt
 
 
-img_dir = 'data/udacity_IMG'
-csv_dir = 'data/udacity_driving_log.csv'
+img_dir = 'data/IMG'
+csv_dir = 'data/driving_log.csv'
 np_dir = 'data/np_data/'
 img_list = os.listdir(img_dir)
 img_combo = []
@@ -46,11 +46,10 @@ def save_images():
   #cast to numpy array and save to file
   all_center_images = np.array(img_combo)
   print('all_images shape is', all_center_images.shape)
-  np.save('udacity_center_images.npy', all_center_images)
+  #udacity_center_images.npy
+  np.save(np_dir + 'bigturn_center_images.npy', all_center_images)
 
 # save_images()
-# test = np.load('center_images.npy')
-# print('test.shape', test.shape)
 
 
 '''
@@ -69,7 +68,8 @@ def save_csv():
 
   np_angles = np.array(all_angles)
   print('all angles', np_angles.shape)
-  np.save('udacity_angles.npy', np_angles)
+  # udacity_angles.npy
+  np.save(np_dir + 'bigturn_angles.npy', np_angles)
 
 # save_csv()
 
@@ -77,22 +77,22 @@ def save_csv():
 combine my images and udacity images from numpy files
 '''
 def combine_images():
-  my_images = np.load(np_dir + 'center_images.npy')
+  my_images = np.load(np_dir + 'bigturn_center_images.npy')
   udacity_images = np.load(np_dir + 'udacity_center_images.npy')
   combined = np.append(my_images, udacity_images, axis=0)
   print('myimages shape', combined.shape)
-  np.save(np_dir + 'combined_images.npy', combined)
+  np.save(np_dir + 'udacity_bigturn_images.npy', combined)
 
-#combine_images()
+combine_images()
 
 '''
 combine my labels and udacity labels from numpy files (originally from csv files) 
 '''
 def combine_labels():
-  my_labels = np.load(np_dir + 'angles.npy')
+  my_labels = np.load(np_dir + 'bigturn_angles.npy')
   udacity_labels = np.load(np_dir + 'udacity_angles.npy')
   combo_angles = np.append(my_labels, udacity_labels, axis=0)
   print('mylabels shape', combo_angles.shape)
-  np.save(np_dir + 'combined_angles.npy', combo_angles)
+  np.save(np_dir + 'udacity_bigturn_angles.npy', combo_angles)
 
-# combine_labels()
+combine_labels()

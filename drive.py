@@ -27,8 +27,10 @@ prev_image_array = None
 def telemetry(sid, data):
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
+    # print('initial steering angle is', steering_angle)
     # The current throttle of the car
     throttle = data["throttle"]
+    # print('initial throttle is', throttle)
     # The current speed of the car
     speed = data["speed"]
     # The current image from the center camera of the car
@@ -43,7 +45,9 @@ def telemetry(sid, data):
     steering_angle = float(model.predict(image_array, batch_size=1))
 
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = .05  
+    throttle = .10
+    print('new steering angle is', steering_angle)
+    # print('new throttle is', throttle)
     send_control(steering_angle, throttle)
 
 #making a connection
@@ -76,7 +80,8 @@ if __name__ == '__main__':
     weights_file = args.model.replace('json', 'h5')
     #load weights into model
     model.load_weights(weights_file)
-    #model.summary()
+    # print('printing summary now ')
+    # model.summary()
 
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)
