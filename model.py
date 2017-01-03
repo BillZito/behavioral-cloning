@@ -10,6 +10,9 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda
 
+np_dir = 'data/np_data/'
+models_dir = 'models/'
+
 '''
 create a model to train the img data with
 *why need time_len = 1?
@@ -60,7 +63,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=7, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=5, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
   parser.add_argument('--epochsize', type=int, default=7000, help='How many frames per epoch.')
   #confused by help--just skips validation when fit model right?
@@ -72,13 +75,13 @@ if __name__ == "__main__":
   model = make_model()
   # print('model is', model)
 
-  orig_features = np.load('udacity_center_images.npy')
+  orig_features = np.load(np_dir + 'combined_images.npy')
   # print('orig features shape', orig_features.shape)
   # change channels to be in right place
   orig_features = np.moveaxis(orig_features, 3, 1)
   # print('after axis move', orig_features.shape)
 
-  orig_labels = np.load('udacity_angles.npy')
+  orig_labels = np.load(np_dir + 'combined_angles.npy')
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.2, random_state=0)
   print('X_train and y_train', X_train.shape, y_train.shape)
 
@@ -89,8 +92,8 @@ if __name__ == "__main__":
   print('model successfully fit...', model)
 
   #save the model
-  model.save_weights('./udacity_steering_angle.h5', True)
-  with open('./udacity_steering_angle.json', 'w') as outfile: 
+  model.save_weights(models_dir + 'combined_steering_angle.h5', True)
+  with open(models_dir + 'combined_steering_angle.json', 'w') as outfile: 
     json.dump(model.to_json(), outfile)
 
   #if haven't saved ouput yet, save now
