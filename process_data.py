@@ -47,9 +47,9 @@ def save_images():
   all_center_images = np.array(img_combo)
   print('all_images shape is', all_center_images.shape)
   #udacity_center_images.npy
-  np.save(np_dir + 'bigturn_center_images.npy', all_center_images)
+  np.save(np_dir + 'balanced_turn_images.npy', all_center_images)
 
-# save_images()
+save_images()
 
 
 '''
@@ -69,19 +69,19 @@ def save_csv():
   np_angles = np.array(all_angles)
   print('all angles', np_angles.shape)
   # udacity_angles.npy
-  np.save(np_dir + 'bigturn_angles.npy', np_angles)
+  np.save(np_dir + 'balanced_turn_angles.npy', np_angles)
 
-# save_csv()
+save_csv()
 
 '''
 combine my images and udacity images from numpy files
 '''
 def combine_images():
-  my_images = np.load(np_dir + 'bigturn_center_images.npy')
-  udacity_images = np.load(np_dir + 'udacity_center_images.npy')
+  my_images = np.load(np_dir + 'balanced_turn_images.npy')
+  udacity_images = np.load(np_dir + 'combined_images.npy')
   combined = np.append(my_images, udacity_images, axis=0)
   print('myimages shape', combined.shape)
-  np.save(np_dir + 'udacity_bigturn_images.npy', combined)
+  np.save(np_dir + 'balanced_combo_images.npy', combined)
 
 combine_images()
 
@@ -89,10 +89,10 @@ combine_images()
 combine my labels and udacity labels from numpy files (originally from csv files) 
 '''
 def combine_labels():
-  my_labels = np.load(np_dir + 'bigturn_angles.npy')
-  udacity_labels = np.load(np_dir + 'udacity_angles.npy')
+  my_labels = np.load(np_dir + 'balanced_turn_angles.npy')
+  udacity_labels = np.load(np_dir + 'combined_angles.npy')
   combo_angles = np.append(my_labels, udacity_labels, axis=0)
   print('mylabels shape', combo_angles.shape)
-  np.save(np_dir + 'udacity_bigturn_angles.npy', combo_angles)
+  np.save(np_dir + 'balanced_combo_angles.npy', combo_angles)
 
 combine_labels()
