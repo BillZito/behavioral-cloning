@@ -6,7 +6,9 @@ from scipy import misc
 import matplotlib.pyplot as plt
 
 
-img_dir = 'data/IMG'
+img_dir = 'data/udacity_IMG'
+csv_dir = 'data/udacity_driving_log.csv'
+np_dir = 'data/np_data/'
 img_list = os.listdir(img_dir)
 img_combo = []
 
@@ -55,7 +57,7 @@ def save_images():
 save csv contents to a file
 '''
 def save_csv():
-  reader = csv.reader(open('data/driving_log.csv'), delimiter=',')
+  reader = csv.reader(open(csv_dir), delimiter=',')
   
   # split the first value based on value right after center
   all_angles = []
@@ -71,20 +73,26 @@ def save_csv():
 
 # save_csv()
 
+'''
+combine my images and udacity images from numpy files
+'''
 def combine_images():
-  my_images = np.load('center_images.npy')
-  udacity_images = np.load('udacity_center_images.npy')
+  my_images = np.load(np_dir + 'center_images.npy')
+  udacity_images = np.load(np_dir + 'udacity_center_images.npy')
   combined = np.append(my_images, udacity_images, axis=0)
   print('myimages shape', combined.shape)
-  np.save('combined_images.npy', combined)
+  np.save(np_dir + 'combined_images.npy', combined)
 
-# combine_images()
+#combine_images()
 
+'''
+combine my labels and udacity labels from numpy files (originally from csv files) 
+'''
 def combine_labels():
-  my_labels = np.load('angles.npy')
-  udacity_labels = np.load('udacity_angles.npy')
+  my_labels = np.load(np_dir + 'angles.npy')
+  udacity_labels = np.load(np_dir + 'udacity_angles.npy')
   combo_angles = np.append(my_labels, udacity_labels, axis=0)
   print('mylabels shape', combo_angles.shape)
-  np.save('combined_angles.npy', combo_angles)
+  np.save(np_dir + 'combined_angles.npy', combo_angles)
 
-combine_labels()
+# combine_labels()
