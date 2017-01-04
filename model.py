@@ -7,11 +7,12 @@ import numpy as np
 from scipy import misc
 from sklearn.model_selection import train_test_split
 
+from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda
 
 np_dir = 'data/np_data/'
-models_dir = 'models/'
+model_dir = 'models/'
 
 '''
 create a model to train the img data with
@@ -52,22 +53,26 @@ def make_model(time_len=1):
 
   #compile model and return. setting loss to mean standard error because regression
   #no metrics
-  model.compile(optimizer='adam', loss='mse')
+  adam = Adam(lr=0.00001)
+  model.compile(optimizer=adam, loss='mse')
 
   return model
-
 
 
 if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
-  parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=3, help='Number of epochs.')
+  parser.add_argument('--batch', type=int, default=512, help='Batch size.')
+  parser.add_argument('--epoch', type=int, default=5, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
-  parser.add_argument('--epochsize', type=int, default=7000, help='How many frames per epoch.')
+  parser.add_argument('--epochsize', type=int, default=20000, help='How many frames per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
+  parser.add_argument('--features', type=str, default=np_dir + '1_3_udacity_combo_images_5th.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + '1_3_udacity_combo_angles_5th.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'udacity_combo_11_steering_angle', help='File where model found')
+
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
   args = parser.parse_args()
@@ -75,14 +80,15 @@ if __name__ == "__main__":
   model = make_model()
   # print('model is', model)
 
-  orig_features = np.load(np_dir + 'udacity_perfect_images.npy')
+  orig_features = np.load(args.features)
   # print('orig features shape', orig_features.shape)
   # change channels to be in right place
   orig_features = np.moveaxis(orig_features, 3, 1)
   # print('after axis move', orig_features.shape)
 
-  orig_labels = np.load(np_dir + 'udacity_perfect_angles.npy')
-  X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.2, random_state=0)
+  orig_labels = np.load(args.labels)
+  X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
+  print('training model', args.destfile)
   print('X_train and y_train', X_train.shape, y_train.shape)
 
   print('X_val and y_val', X_val.shape, y_val.shape)
@@ -92,9 +98,7 @@ if __name__ == "__main__":
   print('model successfully fit...', model)
 
   #save the model
-  model.save_weights(models_dir + 'udacity_perfect_steering_angle.h5', True)
-  with open(models_dir + 'udacity_perfect_steering_angle.json', 'w') as outfile: 
+  model.save_weights(args.destfile + '.h5', True)
+  # save weights as json
+  with open(args.destfile + '.json', 'w') as outfile: 
     json.dump(model.to_json(), outfile)
-
-  #if haven't saved ouput yet, save now
-  #turn to json
