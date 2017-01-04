@@ -37,6 +37,7 @@ def telemetry(sid, data):
     imgString = data["image"]
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
+    image_array = image_array[60:160]
     image_array = np.array([image_array])
     image_array = np.moveaxis(image_array, 3, 1)
 

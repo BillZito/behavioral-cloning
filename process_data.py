@@ -6,8 +6,8 @@ from scipy import misc
 import matplotlib.pyplot as plt
 
 
-img_dir = 'data/bridge_left_correct_IMG'
-csv_dir = 'data/bridge_left_correct_driving_log.csv'
+img_dir = 'data/bridge_recovery_2_IMG'
+csv_dir = 'data/bridge_recovery_2_driving_log.csv'
 np_dir = 'data/np_data/'
 img_list = os.listdir(img_dir)
 img_combo = []
@@ -24,7 +24,8 @@ def show_images():
     img_name = img_list[random_num]
     print('image name is ', img_name)
     img = misc.imread(img_dir + '/' + img_name)
-
+    # print('img is ', img)
+    img = img[60:160]
     fig.add_subplot(3, 3, img_num + 1)
     plt.imshow(img)
   
@@ -49,7 +50,7 @@ def save_images(filename):
   #udacity_center_images.npy
   np.save(filename, all_center_images)
 
-# save_images(np_dir + '1_3_bridge_left_recovery_images.npy') 
+# save_images(np_dir + '1_3_bridge_recovery_2_images.npy') 
 
 
 '''
@@ -71,7 +72,7 @@ def save_csv(filename):
   # udacity_angles.npy
   np.save(filename, np_angles)
 
-# save_csv(np_dir + '1_3_prebridge_left_recovery_angles.npy')
+# save_csv(np_dir + '1_3_bridge_recovery_2_angles.npy')
 
 '''
 combine my images and udacity images from numpy files
@@ -84,7 +85,7 @@ def combine_images(first_file, second_file, dest_file):
   print('combined images shape', combined.shape)
   np.save(dest_file, combined)
 
-combine_images(np_dir + '1_3_pre_and_bridge_images.npy', np_dir + '1_3_udacity_combo_images_4th.npy', np_dir + '1_3_udacity_combo_images_5th.npy')
+# combine_images(np_dir + '1_3_bridge_recovery_2_images.npy', np_dir + '1_3_combo_images_night_3rd.npy', np_dir + '1_3_combo_images_night_4th.npy')
 
 '''
 combine my labels and udacity labels from numpy files (originally from csv files) 
@@ -97,7 +98,24 @@ def combine_labels(first_file, second_file, dest_file):
   print('combined labels shape', combo_angles.shape)
   np.save(dest_file, combo_angles)
 
-combine_labels(np_dir + '1_3_pre_and_bridge_angles.npy', np_dir + '1_3_udacity_combo_angles_4th.npy', np_dir + '1_3_udacity_combo_angles_5th.npy')
+# combine_labels(np_dir + '1_3_bridge_recovery_2_angles.npy', np_dir + '1_3_combo_angles_night_3rd.npy', np_dir + '1_3_combo_angles_night_4th.npy')
 
+def crop_images(image_file, dest_file):
+  my_images = np.load(image_file)
+  cropped_images = []
+  # count = 0
+  for img in my_images:
+    # if count < 10:
+    img = img[60:160]
+    # print('i is', count)
+    # print('image shape', img.shape)
+    cropped_images.append(img)
+    # count += 1
+  np_cropped = np.array(cropped_images)
+  print('cropped images is', np_cropped.shape)
+  np.save(dest_file, np_cropped)
+  print('dest file is', dest_file)
+
+crop_images(np_dir + 'udacity_images.npy', np_dir + 'cropped_udacity_images.npy')
 
 
