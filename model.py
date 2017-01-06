@@ -67,10 +67,29 @@ def myGenerator(X, y, batch_size, num_per_epoch):
   # print('X shape', X.shape)
   # print('y shape', y.shape)
   print('generator starting')
+  # randomly x-y flip before returning 
+
   # while True:
   for i in range(num_per_epoch):
     start, end = i * batch_size, (i + 1) * batch_size
+    
+    # for j in range(start, end):
+      # if j % 2 == 0:
+        # print('even', j)
+
     yield (X[start: end], y[start: end])
+
+def flipImage(X, y):
+  flipped_imgs = np.array([X[0]])
+  print('flipped before', flipped_imgs.shape)
+  for i in range(1, 10):
+    flip = np.fliplr(X[i: i+1])
+    print('flip shape', flip.shape)
+    flipped_imgs = np.append(flipped_imgs, flip, axis=0)
+
+  print('full', flipped_imgs.shape)
+  return flipped_imgs, y
+
 
 if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
@@ -90,8 +109,6 @@ if __name__ == "__main__":
   parser.set_defaults(loadweights=False)
   args = parser.parse_args()
 
-  model = make_model()
-  # print('model is', model)
 
   orig_features = np.load(args.features)
   print('orig features shape', orig_features.shape)
@@ -103,45 +120,25 @@ if __name__ == "__main__":
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
   print('training model', args.destfile)
   print('X_train and y_train', X_train.shape, y_train.shape)
-
   print('X_val and y_val', X_val.shape, y_val.shape)
-  #try to fit model normally without generator... 
-  # model.fit(X_train, y_train, nb_epoch=args.epoch, batch_size=args.batch, shuffle=True, validation_data=(X_val, y_val))
-  # train_datagen = ImageDataGenerator(horizontal_flip=True)
-  # train_generator = myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize)
-  # print('train_datagen', train_datagen)
 
-  # train_generator = train_datagen.flow(X_train, y_train, batch_size=args.batch)
-  # validation_generator = train_datagen.flow(X_val, y_val, batch_size=args.batch)
-  # print('train generator', train_generator)
-  # train_datagen.fit(X_train)
+  flipImage(X_train, y_train)
+  # print('x sahpe', new_X.shape)
+  # print('y shape', new_y.shape)
 
-  # X_batch, y_batch = train_datagen.flow(X_train, batch_size=32)
-  # print('not one is', not_one)
+  # model = make_model()
+  # # print('model is', model)
+  # model.fit_generator(
+  #   myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
+  #   nb_epoch=2, 
+  #   samples_per_epoch=args.epochsize)
+  #   # validation_data=validation_generator,
+  #   # nb_val_samples=1024)
 
-  # train_generator = train_datagen.flow_from_directory(
-  #   'data/udacity_IMG',
-  #   target_size=(160, 320),
-  #   batch_size=32,
-  #   class_mode='sparse') #this doesnt seem like what we want todo
+  # print('model successfully fit...', model)
 
-  # validation_generator = train_datagen.flow_from_directory(
-  #   'data/bridge_recovery_IMG',
-  #   target_size=(160, 320),
-  #   batch_size=32,
-  #   class_mode='sparse') 
-
-  model.fit_generator(
-    myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
-    nb_epoch=2, 
-    samples_per_epoch=args.epochsize)
-    # validation_data=validation_generator,
-    # nb_val_samples=1024)
-
-  print('model successfully fit...', model)
-
-  #save the model
-  model.save_weights(args.destfile + '.h5', True)
-  # save weights as json
-  with open(args.destfile + '.json', 'w') as outfile: 
-    json.dump(model.to_json(), outfile)
+  # #save the model
+  # model.save_weights(args.destfile + '.h5', True)
+  # # save weights as json
+  # with open(args.destfile + '.json', 'w') as outfile: 
+  #   json.dump(model.to_json(), outfile)
