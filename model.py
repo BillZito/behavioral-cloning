@@ -2,9 +2,11 @@
 Trains model for determining steering angle
 '''
 import json
+import random
 import argparse
 import numpy as np
 from scipy import misc
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 from keras.optimizers import Adam
@@ -80,16 +82,40 @@ def myGenerator(X, y, batch_size, num_per_epoch):
     yield (X[start: end], y[start: end])
 
 def flipImage(X, y):
+  # flipped_imgs = np.empty([1, 100, 320, 3])
   flipped_imgs = np.array([X[0]])
   print('flipped before', flipped_imgs.shape)
-  for i in range(1, 10):
-    flip = np.fliplr(X[i: i+1])
-    print('flip shape', flip.shape)
-    flipped_imgs = np.append(flipped_imgs, flip, axis=0)
+  for i in range(0, 10):
 
+    flip = np.fliplr(X[i])
+    print('flip shape', flip.shape)
+    flipped_imgs = np.append(flipped_imgs, flip.reshape((1,) + flip.shape), axis=0)
+
+  flipped_imgs = np.delete(flipped_imgs, 0, 0)
   print('full', flipped_imgs.shape)
   return flipped_imgs, y
 
+def show_images(img_arr, flipped_arr):
+  fig = plt.figure()
+
+  #for 9 random images, print them 
+  for img_num in range(0, 3):
+    # random_num = random.randint(0, len(img_arr))
+    # print('img_arr shape', img_arr.shape)
+    img = img_arr[img_num]
+    # print('image name is ', img_name)
+    # img = misc.imread(filename + img_name)
+    # np_img = np.array(img)
+    # flipped_img = np.fliplr(img)[60:160]
+    flipped_img = flipped_arr[img_num]
+    # print('img is ', img)
+    # img = img[60:160]
+    fig.add_subplot(5, 5, img_num * 2 + 1)
+    plt.imshow(img)
+    fig.add_subplot(5, 5, img_num * 2 + 2)
+    plt.imshow(flipped_img)
+  
+  plt.show()
 
 if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
@@ -111,18 +137,20 @@ if __name__ == "__main__":
 
 
   orig_features = np.load(args.features)
-  print('orig features shape', orig_features.shape)
+  # print('orig features shape', orig_features.shape)
   # change channels to be in right place
   # orig_features = np.moveaxis(orig_features, 3, 1)
   # print('after axis move', orig_features.shape)
 
   orig_labels = np.load(args.labels)
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
-  print('training model', args.destfile)
-  print('X_train and y_train', X_train.shape, y_train.shape)
-  print('X_val and y_val', X_val.shape, y_val.shape)
+  # print('training model', args.destfile)
+  # print('X_train and y_train', X_train.shape, y_train.shape)
+  # print('X_val and y_val', X_val.shape, y_val.shape)
 
-  flipImage(X_train, y_train)
+  flip_x, norm_y = flipImage(X_train, y_train)
+  show_images(X_train[0:10], flip_x)
+
   # print('x sahpe', new_X.shape)
   # print('y shape', new_y.shape)
 

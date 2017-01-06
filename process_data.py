@@ -15,7 +15,7 @@ img_combo = []
 '''
 read in 10 random imagezs and plot them so we can see data
 '''
-def show_images():
+def show_images(filename, img_list):
   fig = plt.figure()
 
   #for 9 random images, print them 
@@ -23,7 +23,7 @@ def show_images():
     random_num = random.randint(0, len(img_list))
     img_name = img_list[random_num]
     print('image name is ', img_name)
-    img = misc.imread(img_dir + '/' + img_name)
+    img = misc.imread(filename + img_name)
     np_img = np.array(img)
     flipped_img = np.fliplr(np_img)[60:160]
 
@@ -36,7 +36,7 @@ def show_images():
   
   plt.show()
 
-show_images()
+# show_images(img_dir + '/', img_list)
 
 
 '''
