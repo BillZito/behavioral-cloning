@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 from scipy import misc
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
 from keras.optimizers import Adam
@@ -81,35 +82,59 @@ def myGenerator(X, y, batch_size, num_per_epoch):
 
     yield (X[start: end], y[start: end])
 
-def flipImage(X, y):
-  # flipped_imgs = np.empty([1, 100, 320, 3])
-  flipped_imgs = np.array([X[0]])
-  print('flipped before', flipped_imgs.shape)
-  for i in range(0, 10):
-
-    flip = np.fliplr(X[i])
-    print('flip shape', flip.shape)
+'''
+flip images horizontally
+'''
+def flipX(images):
+  # initialize with correct size
+  print('flip x called', images.shape)
+  flipped_imgs = np.array([images[0]])
+  for i in range(10):
+    #len(images)
+    flip = np.fliplr(images[i])
     flipped_imgs = np.append(flipped_imgs, flip.reshape((1,) + flip.shape), axis=0)
+    print('flipped imgs appended', i)
 
+  # remove first image which was just there to initialize size
   flipped_imgs = np.delete(flipped_imgs, 0, 0)
-  print('full', flipped_imgs.shape)
-  return flipped_imgs, y
+  return flipped_imgs
 
+'''
+flip labels to negative
+'''
+def flipY(labels): 
+  for i in range(10):
+    # len(labels)
+    labels[i] = labels[i] * -1
+    # print('after', labels[i])
+  return labels[0:10]
+
+'''
+for half of images and labels given, flip them, then return
+'''
+def flipHalf(X, y):
+  shuffled_X, shuffled_y = shuffle(X, y)
+  half = int(len(X) / 2)
+  end = len(X) - 1
+
+  half_flipped_X = flipX(shuffled_X[0:half])
+  modified_X = np.concatenate([half_flipped_X, shuffled_X[half:end]])
+
+  half_flipped_y = flipY(shuffled_y[0:half])
+  modified_y = np.concatenate([half_flipped_y, shuffled_y[half:end]])
+  return modified_X, modified_y
+
+'''
+show images to test that flipping correct
+'''
 def show_images(img_arr, flipped_arr):
   fig = plt.figure()
 
-  #for 9 random images, print them 
+  #for 25 random images, print them 
   for img_num in range(0, 3):
-    # random_num = random.randint(0, len(img_arr))
-    # print('img_arr shape', img_arr.shape)
     img = img_arr[img_num]
-    # print('image name is ', img_name)
-    # img = misc.imread(filename + img_name)
-    # np_img = np.array(img)
-    # flipped_img = np.fliplr(img)[60:160]
     flipped_img = flipped_arr[img_num]
-    # print('img is ', img)
-    # img = img[60:160]
+
     fig.add_subplot(5, 5, img_num * 2 + 1)
     plt.imshow(img)
     fig.add_subplot(5, 5, img_num * 2 + 2)
@@ -145,14 +170,14 @@ if __name__ == "__main__":
   orig_labels = np.load(args.labels)
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
   # print('training model', args.destfile)
-  # print('X_train and y_train', X_train.shape, y_train.shape)
+  y_train = y_train.astype(np.float)
+  y_val = y_val.astype(np.float)
+  print('X_train and y_train', X_train.shape, y_train.shape)
   # print('X_val and y_val', X_val.shape, y_val.shape)
 
-  flip_x, norm_y = flipImage(X_train, y_train)
-  show_images(X_train[0:10], flip_x)
-
-  # print('x sahpe', new_X.shape)
-  # print('y shape', new_y.shape)
+  half_flip_X, half_flip_y = flipHalf(X_train, y_train)
+  print('x', half_flip_X.shape)
+  print('y', half_flip_y.shape)
 
   # model = make_model()
   # # print('model is', model)
