@@ -25,6 +25,7 @@ prev_image_array = None
 #and therefore sid and data are based in by processor
 @sio.on('telemetry')
 def telemetry(sid, data):
+    print('tel called')
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # print('initial steering angle is', steering_angle)
@@ -33,13 +34,14 @@ def telemetry(sid, data):
     # print('initial throttle is', throttle)
     # The current speed of the car
     speed = data["speed"]
+    # print('data', data)
     # The current image from the center camera of the car
     imgString = data["image"]
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
     image_array = image_array[60:160]
     image_array = np.array([image_array])
-    image_array = np.moveaxis(image_array, 3, 1)
+    # image_array = np.moveaxis(image_array, 3, 1)
 
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     #changed from transformed image array since I do it myself... does our model predict doing the same things we defined?

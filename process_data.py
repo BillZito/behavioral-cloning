@@ -24,14 +24,19 @@ def show_images():
     img_name = img_list[random_num]
     print('image name is ', img_name)
     img = misc.imread(img_dir + '/' + img_name)
+    np_img = np.array(img)
+    flipped_img = np.fliplr(np_img)[60:160]
+
     # print('img is ', img)
     img = img[60:160]
-    fig.add_subplot(3, 3, img_num + 1)
+    fig.add_subplot(5, 5, img_num * 2 + 1)
     plt.imshow(img)
+    fig.add_subplot(5, 5, img_num * 2 + 2)
+    plt.imshow(flipped_img)
   
   plt.show()
 
-# show_images()
+show_images()
 
 
 '''
@@ -116,6 +121,6 @@ def crop_images(image_file, dest_file):
   np.save(dest_file, np_cropped)
   print('dest file is', dest_file)
 
-crop_images(np_dir + 'udacity_images.npy', np_dir + 'cropped_udacity_images.npy')
+# crop_images(np_dir + 'udacity_images.npy', np_dir + 'cropped_udacity_images.npy')
 
 

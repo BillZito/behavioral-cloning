@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda
+from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 
 np_dir = 'data/np_data/'
 model_dir = 'models/'
@@ -20,8 +21,8 @@ create a model to train the img data with
 '''
 def make_model(time_len=1):
   #our data, 3 color channels, 160 by 320
-  ch, row, col = 3, 100, 320
-  start_shape = (ch, row, col)
+  row, col, ch = 100, 320, 3
+  start_shape = (row, col, ch)
 
   #set up sequential linear model (stacked on top of eachother)
   model = Sequential()
@@ -64,14 +65,14 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=512, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=5, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=2, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
   parser.add_argument('--epochsize', type=int, default=20000, help='How many frames per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'cropped_udacity_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'udacity_cropped_steering_angle', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_3', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -83,7 +84,7 @@ if __name__ == "__main__":
   orig_features = np.load(args.features)
   print('orig features shape', orig_features.shape)
   # change channels to be in right place
-  orig_features = np.moveaxis(orig_features, 3, 1)
+  # orig_features = np.moveaxis(orig_features, 3, 1)
   # print('after axis move', orig_features.shape)
 
   orig_labels = np.load(args.labels)
@@ -93,7 +94,36 @@ if __name__ == "__main__":
 
   print('X_val and y_val', X_val.shape, y_val.shape)
   #try to fit model normally without generator... 
-  model.fit(X_train, y_train, nb_epoch=args.epoch, batch_size=args.batch, shuffle=True, validation_data=(X_val, y_val))
+  # model.fit(X_train, y_train, nb_epoch=args.epoch, batch_size=args.batch, shuffle=True, validation_data=(X_val, y_val))
+  train_datagen = ImageDataGenerator(horizontal_flip=True)
+  print('train_datagen', train_datagen)
+
+  train_generator = train_datagen.flow(X_train, y_train, batch_size=512)
+  validation_generator = train_datagen.flow(X_val, y_val, batch_size=512)
+  print('train generator', train_generator)
+  # train_datagen.fit(X_train)
+
+  # X_batch, y_batch = train_datagen.flow(X_train, batch_size=32)
+  # print('not one is', not_one)
+
+  # train_generator = train_datagen.flow_from_directory(
+  #   'data/udacity_IMG',
+  #   target_size=(160, 320),
+  #   batch_size=32,
+  #   class_mode='sparse') #this doesnt seem like what we want todo
+
+  # validation_generator = train_datagen.flow_from_directory(
+  #   'data/bridge_recovery_IMG',
+  #   target_size=(160, 320),
+  #   batch_size=32,
+  #   class_mode='sparse') 
+
+  model.fit_generator(
+    train_generator,
+    nb_epoch=5, 
+    samples_per_epoch=20000,
+    validation_data=validation_generator,
+    nb_val_samples=1024)
 
   print('model successfully fit...', model)
 

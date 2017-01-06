@@ -71,3 +71,24 @@ callbacks=[early_stopping]
 
 #can print history of model to see weights
 #can set layer to not be trainable (frozen)
+
+
+'''
+generate additional images 
+'''
+datagen = ImageDataGenerator(
+  horizontal_flip=True)
+
+img = load_img('test2.png')
+x = img_to_array(img)
+x = x.reshape((1, ) + x.shape)
+# print('x shape before', x.shape)
+# x = np.moveaxis(x, 3, 1)
+print('x shape after', x.shape)
+
+i = 0
+for batch in datagen.flow(x, batch_size = 1, save_to_dir='preview', save_prefix='new_test', save_format='png'):
+  print('running with i', i)
+  i += 1
+  if i > 20:
+    break
