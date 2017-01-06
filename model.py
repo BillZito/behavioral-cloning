@@ -59,20 +59,32 @@ def make_model(time_len=1):
 
   return model
 
+'''
+create generator to create augmented images
+'''
+def myGenerator(X, y, batch_size, num_per_epoch):
+  #preprocess images
+  # print('X shape', X.shape)
+  # print('y shape', y.shape)
+  print('generator starting')
+  # while True:
+  for i in range(num_per_epoch):
+    start, end = i * batch_size, (i + 1) * batch_size
+    yield (X[start: end], y[start: end])
 
 if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
-  parser.add_argument('--batch', type=int, default=512, help='Batch size.')
+  parser.add_argument('--batch', type=int, default=128, help='Batch size.')
   parser.add_argument('--epoch', type=int, default=2, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
-  parser.add_argument('--epochsize', type=int, default=20000, help='How many frames per epoch.')
+  parser.add_argument('--epochsize', type=int, default=512, help='How many images per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'cropped_udacity_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_3', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_4', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -95,12 +107,13 @@ if __name__ == "__main__":
   print('X_val and y_val', X_val.shape, y_val.shape)
   #try to fit model normally without generator... 
   # model.fit(X_train, y_train, nb_epoch=args.epoch, batch_size=args.batch, shuffle=True, validation_data=(X_val, y_val))
-  train_datagen = ImageDataGenerator(horizontal_flip=True)
-  print('train_datagen', train_datagen)
+  # train_datagen = ImageDataGenerator(horizontal_flip=True)
+  # train_generator = myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize)
+  # print('train_datagen', train_datagen)
 
-  train_generator = train_datagen.flow(X_train, y_train, batch_size=512)
-  validation_generator = train_datagen.flow(X_val, y_val, batch_size=512)
-  print('train generator', train_generator)
+  # train_generator = train_datagen.flow(X_train, y_train, batch_size=args.batch)
+  # validation_generator = train_datagen.flow(X_val, y_val, batch_size=args.batch)
+  # print('train generator', train_generator)
   # train_datagen.fit(X_train)
 
   # X_batch, y_batch = train_datagen.flow(X_train, batch_size=32)
@@ -119,11 +132,11 @@ if __name__ == "__main__":
   #   class_mode='sparse') 
 
   model.fit_generator(
-    train_generator,
-    nb_epoch=5, 
-    samples_per_epoch=20000,
-    validation_data=validation_generator,
-    nb_val_samples=1024)
+    myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
+    nb_epoch=2, 
+    samples_per_epoch=args.epochsize)
+    # validation_data=validation_generator,
+    # nb_val_samples=1024)
 
   print('model successfully fit...', model)
 
