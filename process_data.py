@@ -121,6 +121,6 @@ def crop_images(image_file, dest_file):
   np.save(dest_file, np_cropped)
   print('dest file is', dest_file)
 
-# crop_images(np_dir + 'udacity_images.npy', np_dir + 'cropped_udacity_images.npy')
+crop_images(np_dir + 'udacity_images.npy', np_dir + 'cropped_udacity_images.npy')
 
 

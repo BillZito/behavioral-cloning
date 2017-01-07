@@ -66,34 +66,30 @@ def make_model(time_len=1):
 create generator to create augmented images
 '''
 def myGenerator(X, y, batch_size, num_per_epoch):
-  #preprocess images
-  # print('X shape', X.shape)
-  # print('y shape', y.shape)
+
   print('generator starting')
-  # randomly x-y flip before returning 
+  #preprocess image
 
-  # while True:
-  for i in range(num_per_epoch):
-    start, end = i * batch_size, (i + 1) * batch_size
-    
-    # for j in range(start, end):
-      # if j % 2 == 0:
-        # print('even', j)
-
-    yield (X[start: end], y[start: end])
+  while True:
+    # print('range is', int(num_per_epoch/batch_size))
+    for i in range(int(num_per_epoch/batch_size)):
+      # print('i is', i)
+      X, y = shuffle(X, y)
+      start, end = i * batch_size, (i + 1) * batch_size
+      half_flip_X, half_flip_y = flipHalf(X_train[start: end], y_train[start: end])
+      yield (half_flip_X, half_flip_y)
 
 '''
 flip images horizontally
 '''
 def flipX(images):
   # initialize with correct size
-  print('flip x called', images.shape)
+  # print('flip x called', images.shape)
   flipped_imgs = np.array([images[0]])
-  for i in range(10):
-    #len(images)
+  for i in range(len(images)):
     flip = np.fliplr(images[i])
     flipped_imgs = np.append(flipped_imgs, flip.reshape((1,) + flip.shape), axis=0)
-    print('flipped imgs appended', i)
+    # print('flipped imgs appended', i)
 
   # remove first image which was just there to initialize size
   flipped_imgs = np.delete(flipped_imgs, 0, 0)
@@ -103,11 +99,10 @@ def flipX(images):
 flip labels to negative
 '''
 def flipY(labels): 
-  for i in range(10):
-    # len(labels)
+  # print('flip y called', labels.shape)
+  for i in range(len(labels)):
     labels[i] = labels[i] * -1
-    # print('after', labels[i])
-  return labels[0:10]
+  return labels
 
 '''
 for half of images and labels given, flip them, then return
@@ -115,13 +110,14 @@ for half of images and labels given, flip them, then return
 def flipHalf(X, y):
   shuffled_X, shuffled_y = shuffle(X, y)
   half = int(len(X) / 2)
-  end = len(X) - 1
+  end = len(X)
 
   half_flipped_X = flipX(shuffled_X[0:half])
   modified_X = np.concatenate([half_flipped_X, shuffled_X[half:end]])
 
   half_flipped_y = flipY(shuffled_y[0:half])
   modified_y = np.concatenate([half_flipped_y, shuffled_y[half:end]])
+  # print('modified shapes', modified_X.shape, modified_y.shape)
   return modified_X, modified_y
 
 '''
@@ -146,15 +142,15 @@ if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
-  parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=2, help='Number of epochs.')
+  parser.add_argument('--batch', type=int, default=256, help='Batch size.')
+  parser.add_argument('--epoch', type=int, default=4, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
-  parser.add_argument('--epochsize', type=int, default=512, help='How many images per epoch.')
+  parser.add_argument('--epochsize', type=int, default=15000, help='How many images per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'cropped_udacity_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_4', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'cropped_1_3_combo_images_night_4th.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + '1_3_combo_angles_night_4th.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_6', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -175,23 +171,23 @@ if __name__ == "__main__":
   print('X_train and y_train', X_train.shape, y_train.shape)
   # print('X_val and y_val', X_val.shape, y_val.shape)
 
-  half_flip_X, half_flip_y = flipHalf(X_train, y_train)
-  print('x', half_flip_X.shape)
-  print('y', half_flip_y.shape)
+  # half_flip_X, half_flip_y = flipHalf(X_train, y_train)
+  # print('x', half_flip_X.shape)
+  # print('y', half_flip_y.shape)
 
-  # model = make_model()
-  # # print('model is', model)
-  # model.fit_generator(
-  #   myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
-  #   nb_epoch=2, 
-  #   samples_per_epoch=args.epochsize)
-  #   # validation_data=validation_generator,
-  #   # nb_val_samples=1024)
+  model = make_model()
+  # print('model is', model)
+  model.fit_generator(
+    myGenerator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
+    nb_epoch=args.epoch, 
+    samples_per_epoch=args.epochsize,
+    validation_data=myGenerator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
+    nb_val_samples=800)
 
-  # print('model successfully fit...', model)
+  print('model successfully fit...', model)
 
-  # #save the model
-  # model.save_weights(args.destfile + '.h5', True)
-  # # save weights as json
-  # with open(args.destfile + '.json', 'w') as outfile: 
-  #   json.dump(model.to_json(), outfile)
+  #save the model
+  model.save_weights(args.destfile + '.h5', True)
+  # save weights as json
+  with open(args.destfile + '.json', 'w') as outfile: 
+    json.dump(model.to_json(), outfile)

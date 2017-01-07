@@ -28,13 +28,10 @@ def telemetry(sid, data):
     print('tel called')
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
-    # print('initial steering angle is', steering_angle)
     # The current throttle of the car
     throttle = data["throttle"]
-    # print('initial throttle is', throttle)
     # The current speed of the car
     speed = data["speed"]
-    # print('data', data)
     # The current image from the center camera of the car
     imgString = data["image"]
     image = Image.open(BytesIO(base64.b64decode(imgString)))
@@ -48,7 +45,7 @@ def telemetry(sid, data):
     steering_angle = float(model.predict(image_array, batch_size=1))
 
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = .1
+    throttle = .3
     print('new steering angle is', steering_angle)
     # print('new throttle is', throttle)
     send_control(steering_angle, throttle)

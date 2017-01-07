@@ -69,8 +69,7 @@ keras.models.load_model(filepath)
 early_stopping = EarlyStopping(monitor='val_loss', patience=2)
 callbacks=[early_stopping]
 
-#can print history of model to see weights
-#can set layer to not be trainable (frozen)
+#can print history of model to see weights #can set layer to not be trainable (frozen)
 
 
 '''
