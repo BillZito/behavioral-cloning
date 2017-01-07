@@ -1,5 +1,6 @@
 import os
 import csv
+import cv2
 import random
 import numpy as np
 from scipy import misc
@@ -121,7 +122,7 @@ def crop_images(image_file, dest_file):
   np.save(dest_file, np_cropped)
   print('dest file is', dest_file)
 
-crop_images(np_dir + '1_3_uncropped_normalized_images.npy', np_dir + '1_3_normalized_images.npy')
+# crop_images(np_dir + '1_3_uncropped_normalized_images.npy', np_dir + '1_3_normalized_images.npy')
 
 def plot_images(filename):
   labels = np.load(filename)
@@ -134,7 +135,7 @@ def plot_images(filename):
 
 # plot_images(np_dir + '1_3_combo_angles_night_4th.npy')
 
-def zero_normalize(angles_filename, images_filename, new_angles_dir, new_images_dir):
+def zero_normalize(angles_filename, images_filename, angles_dest_file, images_dest_file):
   labels = np.load(angles_filename)
   images = np.load(images_filename)
   print('initial shapes', labels.shape, images.shape)
@@ -164,7 +165,22 @@ def zero_normalize(angles_filename, images_filename, new_angles_dir, new_images_
   normalized_labels = np.delete(normalized_labels, 0, 0)
   normalized_images = np.delete(normalized_images, 0, 0)
 
-  np.save(normalized_labels, new_angles_dir)
-  np.save(normalized_images, new_images_dir)
+  np.save(angles_dest_file, normalized_labels)
+  np.save(images_dest_file, normalized_images)
 
+# zero_normalize(np_dir + '1_3_combo_angles_4th.npy', np_dir + 'cropped_1_3_combo_images_4th.npy', np_dir + 'normalized_angles.npy', np_dir + 'normalized_images.npy')
 # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'cropped_udacity_images.npy', np_dir + 'udacity_normalized_angles.npy', np_dir + 'udacity_normalized_images.npy')
+
+def make_64(filename, dest_file):
+  img_arr = np.load(filename)
+  resized_imgs = np.array([img_arr[0]])
+  count = 0
+  for np_img in img_arr:
+    if count > 10:
+      img = cv2.imread(np_img)
+      cv2.resize(img, (64, 64))
+      print
+      resized = 
+
+
+make_64(np_dir + 'cropped_udacity_images.npy', np_dir + 'small_cropped_udacity_images.npy')

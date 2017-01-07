@@ -173,7 +173,7 @@ if __name__ == "__main__":
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'normalized_udacity_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'normalized_udacity_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_normalized_angles.npy', help='File where labels .npy found.')
   parser.add_argument('--destfile', type=str, default=model_dir + 'generator_10', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
