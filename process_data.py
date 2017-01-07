@@ -121,6 +121,50 @@ def crop_images(image_file, dest_file):
   np.save(dest_file, np_cropped)
   print('dest file is', dest_file)
 
-crop_images(np_dir + 'udacity_images.npy', np_dir + 'cropped_udacity_images.npy')
+crop_images(np_dir + '1_3_uncropped_normalized_images.npy', np_dir + '1_3_normalized_images.npy')
 
+def plot_images(filename):
+  labels = np.load(filename)
+  print('lables start', labels)
+  labels = np.multiply(labels.astype(float), 100)
+  print('after mult, labels are', labels)
+  print('as int, labels are', labels.astype(int))
+  plt.hist(x=labels.astype(int), range=(-50, 50), bins=101)
+  plt.show()
 
+# plot_images(np_dir + '1_3_combo_angles_night_4th.npy')
+
+def zero_normalize(angles_filename, images_filename, new_angles_dir, new_images_dir):
+  labels = np.load(angles_filename)
+  images = np.load(images_filename)
+  print('initial shapes', labels.shape, images.shape)
+  normalized_labels = np.array([labels[0]])
+  normalized_images = np.array([images[0]])
+
+  deleted_count = 0
+  for index, val in np.ndenumerate(labels.astype(float)): 
+    # print('index is', index[0], 'val', val)
+    if index[0] % 100 == 0: 
+      print('now on index', index)
+
+    random_num = random.randint(1, 100)
+
+    if val != 0 or random_num < 25:
+      normalized_labels = np.append(normalized_labels, np.array([labels[index]]), axis=0)
+      normalized_images = np.append(normalized_images, np.array([images[index]]), axis=0)
+      if normalized_labels.shape[0] % 100 == 0:
+        print('now labels', normalized_labels.shape[0])
+    else:
+      deleted_count += 1
+      if deleted_count % 100 == 0:
+        print('deleted count now', deleted_count)
+
+  print('0s deleted', deleted_count)
+  print('total vals now', normalized_labels.shape, normalized_images.shape)
+  normalized_labels = np.delete(normalized_labels, 0, 0)
+  normalized_images = np.delete(normalized_images, 0, 0)
+
+  np.save(normalized_labels, new_angles_dir)
+  np.save(normalized_images, new_images_dir)
+
+# zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'cropped_udacity_images.npy', np_dir + 'udacity_normalized_angles.npy', np_dir + 'udacity_normalized_images.npy')

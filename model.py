@@ -73,7 +73,9 @@ def my_generator(X, y, batch_size, num_per_epoch):
 
   while True:
     # print('range is', int(num_per_epoch/batch_size))
-    for i in range(int(num_per_epoch/batch_size)):
+    smaller = min(len(X), num_per_epoch)
+    iterations = int(smaller/batch_size)
+    for i in range(iterations):
       # print('i is', i)
       X, y = shuffle(X, y)
       start, end = i * batch_size, (i + 1) * batch_size
@@ -165,14 +167,14 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=3, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=4, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
-  parser.add_argument('--epochsize', type=int, default=5000, help='How many images per epoch.')
+  parser.add_argument('--epochsize', type=int, default=10000, help='How many images per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'cropped_1_3_combo_images_night_4th.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + '1_3_combo_angles_night_4th.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_7', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'normalized_udacity_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'normalized_udacity_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_10', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -202,7 +204,7 @@ if __name__ == "__main__":
     nb_epoch=args.epoch, 
     samples_per_epoch=args.epochsize,
     validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
-    nb_val_samples=500)
+    nb_val_samples=800)
 
   print('model successfully fit...', model)
 
