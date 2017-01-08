@@ -35,10 +35,12 @@ def telemetry(sid, data):
     imgString = data["image"]
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
-    image_array = image_array[60:160]
+    image_array = image_array[60:140]
 
     # resize to 64, 64 and put in shape [1, 64, 64, 3] for model prediction
-    # image_array = cv2.resize(image_array, (64, 64))   
+    image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+
+    image_array = cv2.resize(image_array, (64, 64))   
     # image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
     image_array = np.array([image_array])
     # image_array = np.moveaxis(image_array, 3, 1)

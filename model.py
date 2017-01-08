@@ -25,7 +25,7 @@ create a model to train the img data with
 '''
 def make_model(time_len=1):
   #our data, 3 color channels, 64 by 64
-  row, col, ch = 100, 320, 3
+  row, col, ch = 64, 64, 3
   start_shape = (row, col, ch)
 
   #set up sequential linear model (stacked on top of eachother)
@@ -170,12 +170,12 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=4, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=6, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
-  parser.add_argument('--epochsize', type=int, default=10000, help='How many images per epoch.')
+  parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'normalized_images.npy', help='File where features .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'resized_norm_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'normalized_angles.npy', help='File where labels .npy found.')
   parser.add_argument('--destfile', type=str, default=model_dir + 'generator_11', help='File where model found')
 
