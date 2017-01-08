@@ -10,13 +10,11 @@ from scipy import misc
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-
-import process_data
+# import process_data
 
 np_dir = 'data/np_data/'
 model_dir = 'models/'
@@ -26,7 +24,7 @@ create a model to train the img data with
 *why need time_len = 1?
 '''
 def make_model(time_len=1):
-  #our data, 3 color channels, 160 by 320
+  #our data, 3 color channels, 64 by 64
   row, col, ch = 100, 320, 3
   start_shape = (row, col, ch)
 
@@ -129,24 +127,27 @@ def flip_half(X, y):
 '''
 show images to test that flipping correct
 '''
-# def show_images(img_arr, flipped_arr):
-#   fig = plt.figure()
+def show_images(img_arr, flipped_arr):
+  fig = plt.figure()
 
-#   #for 25 random images, print them 
-#   print('shape', img_arr.shape)
-#   print('len', len(img_arr))
-#   for img_num in range(len(img_arr)):
-#     print('img num is', img_num)
-#     img = img_arr[img_num]
-#     flipped_img = flipped_arr[img_num]
+  #for 25 random images, print them 
+  print('shape', img_arr.shape)
+  print('len', len(img_arr))
+  for img_num in range(len(img_arr)):
+    print('img num is', img_num)
+    img = img_arr[img_num]
+    flipped_img = flipped_arr[img_num]
 
-#     fig.add_subplot(2, 2, img_num * 2 + 1)
-#     plt.imshow(img)
-#     fig.add_subplot(2, 2, img_num * 2 + 2)
-#     plt.imshow(flipped_img)
+    fig.add_subplot(2, 2, img_num * 2 + 1)
+    plt.imshow(img)
+    fig.add_subplot(2, 2, img_num * 2 + 2)
+    plt.imshow(flipped_img)
   
-#   plt.show()
+  plt.show()
 
+'''
+change the brightness for each img in array
+'''
 def change_brightness(img_arr):
   # print('change brightness called')
   adjusted_imgs = np.array([img_arr[0]])
@@ -174,9 +175,9 @@ if __name__ == "__main__":
   parser.add_argument('--epochsize', type=int, default=10000, help='How many images per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'small_cropped_udacity_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_normalized_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_10', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'normalized_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'normalized_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_11', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -190,6 +191,8 @@ if __name__ == "__main__":
   # print('after axis move', orig_features.shape)
 
   orig_labels = np.load(args.labels)
+  # print('orig labels shape', orig_labels.shape)
+
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
   # print('training model', args.destfile)
   y_train = y_train.astype(np.float)

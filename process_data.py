@@ -43,15 +43,32 @@ read in 9 random images from numpy file and visualize
 def show_np_images(src_file):
   fig = plt.figure()
   img_arr = np.load(src_file)
+  print('imgarr size', img_arr.shape)
   #for 9 random images, print them 
   for img_num in range(1, 10):
-    random_num = random.randint(0, img_arr.shape[0])
+    random_num = random.randint(0, img_arr.shape[0] - 1)
     img = img_arr[random_num]
-    print('image name is at', random_num)
+    # print('img is', img.shape)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    print('image is at', random_num)
     fig.add_subplot(3, 3, img_num)
     plt.imshow(img)
   
   plt.show()
+
+
+'''
+plot labels to understand their distribution
+'''
+def plot_labels(src_file):
+  labels = np.load(src_file)
+  # print('lables start', labels)
+  labels = np.multiply(labels.astype(float), 100)
+  # print('after mult, labels are', labels)
+  # print('as int, labels are', labels.astype(int))
+  plt.hist(x=labels.astype(int), range=(-50, 50), bins=101)
+  plt.show()
+
 
 '''
 save all images to file
@@ -86,6 +103,7 @@ def save_csv(dest_file):
   np_angles = np.array(all_angles)
   print('angles shape', np_angles.shape)
   # udacity_angles.npy
+
   np.save(dest_file, np_angles)
 
 '''
@@ -111,7 +129,9 @@ def combine_labels(first_src, second_src, dest_file):
   print('combined labels shape', combo_angles.shape)
   np.save(dest_file, combo_angles)
 
-
+'''
+crop images to remove content above horizon and hood of car
+'''
 def crop_images(img_src, dest_file, low_bound, top_bound):
   my_images = np.load(img_src)
   cropped_images = []
@@ -127,17 +147,6 @@ def crop_images(img_src, dest_file, low_bound, top_bound):
   print('cropped images is', np_cropped.shape)
   np.save(dest_file, np_cropped)
   print('dest file is', dest_file)
-
-
-def plot_images(src_file):
-  labels = np.load(src_file)
-  # print('lables start', labels)
-  labels = np.multiply(labels.astype(float), 100)
-  # print('after mult, labels are', labels)
-  # print('as int, labels are', labels.astype(int))
-  plt.hist(x=labels.astype(int), range=(-50, 50), bins=101)
-  plt.show()
-
 
 '''
 remove 3/4 of zero values since zeros are 50x larger than other data points currently
@@ -177,36 +186,43 @@ def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file):
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 '''
-def make_64(img_src, dest_file):
+def resize_img(img_src, dest_file, size, end=0):
   # print('started')
   img_arr = np.load(img_src)
-  resized_imgs = np.zeros([1, 64, 64, 3])
+  resized_imgs = np.zeros([1, size, size, 3])
   # print('resized_imgs shape', resized_imgs.shape)
+  
+  if end == 0:
+    end = img_arr.shape[0]
+  print('end is ', end)
+
   count = 0
-  for img in img_arr:
-    if count % 100 == 0:
-      print('count is', count)
+  for img in img_arr[0:end]:
+    # print('img[0]', img[0])
+    # if count % 100 == 0:
+    # print('count is', count)
     # img = cv2.imread(np_img)
-    resized = cv2.resize(img, (64, 64))
-    resized = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    resized = cv2.resize(img, (size, size))
     # print('resized is', resized.shape)
     resized_imgs = np.append(resized_imgs, resized.reshape((1,) + resized.shape), axis=0)
     count += 1
 
   resized_imgs = np.delete(resized_imgs, 0, 0)
+  print('resized_imgs size', resized_imgs.shape)
   np.save(dest_file, resized_imgs)
   # print('final shape', resized_imgs.shape)
 
 if __name__ == '__main__':
   # crop_images(img_src=np_dir + 'cropped_1_3_combo_images_night_4th.npy', dest_file=np_dir + 'dcropped_1_3_combo.npy', 0, 80)
-  # make_64(img_src=np_dir + 'dcropped_1_3_combo_images.npy', dest_file=np_dir + 'small_dcropped_combo_images.npy')
-  show_np_images(src_file=np_dir + 'small_dcropped_combo_images.npy')
+  # resize_img(img_src=np_dir + 'dcropped_1_3_combo_images.npy', dest_file=np_dir + 'deleteme.npy', size=64, end=10)
+  show_np_images(src_file=np_dir + 'small_cropped_udacity_images.npy')
+  # plot_labels(np_dir + 'deleteme.npy')
 
   # zero_normalize(np_dir + '1_3_combo_angles_night_4th.npy', np_dir + 'cropped_1_3_combo_images_night_4th.npy', np_dir + 'normalized_angles.npy', np_dir + 'normalized_images.npy')
   # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'cropped_udacity_images.npy', np_dir + 'udacity_normalized_angles.npy', np_dir + 'udacity_normalized_images.npy')
   # show_file_images(img_dir + '/', img_list)
   # save_images(np_dir + '1_3_bridge_recovery_2_images.npy') 
   # save_csv(np_dir + '1_3_bridge_recovery_2_angles.npy')
-  # plot_images(np_dir + '1_3_combo_angles_night_4th.npy')
   # combine_labels(np_dir + '1_3_bridge_recovery_2_angles.npy', np_dir + '1_3_combo_angles_night_3rd.npy', np_dir + '1_3_combo_angles_night_4th.npy')
   # combine_images(np_dir + '1_3_bridge_recovery_2_images.npy', np_dir + '1_3_combo_images_night_3rd.npy', np_dir + '1_3_combo_images_night_4th.npy')
