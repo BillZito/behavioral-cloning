@@ -46,11 +46,12 @@ def show_np_images(src_file):
   print('imgarr size', img_arr.shape)
   #for 9 random images, print them 
   for img_num in range(1, 10):
+    print('img arr shape', img_arr.shape)
     random_num = random.randint(0, img_arr.shape[0] - 1)
     img = img_arr[random_num]
     # print('img is', img.shape)
     # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    print('image is at', random_num)
+    print('image is at', random_num )
     fig.add_subplot(3, 3, img_num)
     plt.imshow(img)
   
@@ -189,24 +190,27 @@ resize given images to 64x64-- reducing fidelity improves model speed and perfor
 def resize_img(img_src, dest_file, size, end=0):
   # print('started')
   img_arr = np.load(img_src)
-  resized_imgs = np.zeros([1, size, size, 3])
+  resized_imgs = np.zeros([1, 80, 320, 3])
   # print('resized_imgs shape', resized_imgs.shape)
   
   if end == 0:
     end = img_arr.shape[0]
   print('end is ', end)
 
-  count = 0
+  # count = 0
   for img in img_arr[0:end]:
-    # print('img[0]', img[0])
+    print('img[0]', img.shape)
     # if count % 100 == 0:
     # print('count is', count)
     # img = cv2.imread(np_img)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    resized = cv2.resize(img, (size, size))
+    resized = cv2.imread(img)
+    resized = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # resized = cv2.cvtColor(resized, cv2.COLOR_HSV2RGB)
+    # resized = cv2.resize(img, (size, size))
     # print('resized is', resized.shape)
-    resized_imgs = np.append(resized_imgs, resized.reshape((1,) + resized.shape), axis=0)
-    count += 1
+    new_item = resized.reshape(1, 80, 320, 3)
+    resized_imgs = np.concatenate((resized_imgs, new_item), axis=0)
+    # count += 1
 
   resized_imgs = np.delete(resized_imgs, 0, 0)
   print('resized_imgs size', resized_imgs.shape)
@@ -215,8 +219,9 @@ def resize_img(img_src, dest_file, size, end=0):
 
 if __name__ == '__main__':
   # crop_images(img_src=np_dir + 'cropped_1_3_combo_images_night_4th.npy', dest_file=np_dir + 'dcropped_1_3_combo.npy', 0, 80)
-  # resize_img(img_src=np_dir + 'dcropped_1_3_combo_images.npy', dest_file=np_dir + 'deleteme.npy', size=64, end=10)
-  show_np_images(src_file=np_dir + 'small_cropped_udacity_images.npy')
+  # show_np_images(src_file=np_dir + 'dcropped_1_3_combo_images.npy')
+  resize_img(img_src=np_dir + 'dcropped_1_3_combo_images.npy', dest_file=np_dir + 'deleteme.npy', size=64, end=10)
+  show_np_images(src_file=np_dir + 'deleteme.npy')
   # plot_labels(np_dir + 'deleteme.npy')
 
   # zero_normalize(np_dir + '1_3_combo_angles_night_4th.npy', np_dir + 'cropped_1_3_combo_images_night_4th.npy', np_dir + 'normalized_angles.npy', np_dir + 'normalized_images.npy')
