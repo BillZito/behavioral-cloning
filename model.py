@@ -14,7 +14,7 @@ from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-# import process_data
+from process_data import crop_images, resize_images, show_images, change_brightness, flip_half, flip_X, flip_y
 
 np_dir = 'data/np_data/'
 model_dir = 'models/'
@@ -83,133 +83,6 @@ def my_generator(X, y, batch_size, num_per_epoch):
       brightness_adjusted_X = change_brightness(half_flip_X)
       yield (brightness_adjusted_X, half_flip_y)
 
-'''
-flip images horizontally
-'''
-def flip_X(images):
-  # initialize with correct size
-  # print('flip x called', images.shape)
-  flipped_imgs = np.array([images[0]])
-  for i in range(len(images)):
-    flip = np.fliplr(images[i])
-    flipped_imgs = np.append(flipped_imgs, flip.reshape((1,) + flip.shape), axis=0)
-    # print('flipped imgs appended', i)
-
-  # remove first image which was just there to initialize size
-  flipped_imgs = np.delete(flipped_imgs, 0, 0)
-  return flipped_imgs
-
-'''
-flip labels to negative
-'''
-def flip_y(labels): 
-  # print('flip y called', labels.shape)
-  for i in range(len(labels)):
-    labels[i] = labels[i] * -1
-  return labels
-
-'''
-for half of images and labels given, flip them, then return
-'''
-def flip_half(X, y):
-  shuffled_X, shuffled_y = shuffle(X, y)
-  half = int(len(X) / 2)
-  end = len(X)
-
-  half_flipped_X = flip_X(shuffled_X[0:half])
-  modified_X = np.concatenate([half_flipped_X, shuffled_X[half:end]])
-
-  half_flipped_y = flip_y(shuffled_y[0:half])
-  modified_y = np.concatenate([half_flipped_y, shuffled_y[half:end]])
-  # print('modified shapes', modified_X.shape, modified_y.shape)
-  return modified_X, modified_y
-
-'''
-show images to test that flipping correct
-'''
-def show_images(img_arr, flipped_arr):
-  fig = plt.figure()
-
-  #for 25 random images, print them 
-  print('shape', img_arr.shape)
-  print('len', len(img_arr))
-  for img_num in range(0, 3):
-    print('img num is', img_num)
-    img = img_arr[img_num]
-    flipped_img = flipped_arr[img_num]
-
-    fig.add_subplot(4, 4, img_num * 2 + 1)
-    plt.imshow(img)
-    fig.add_subplot(4, 4, img_num * 2 + 2)
-    plt.imshow(flipped_img)
-  
-  plt.show()
-
-'''
-change the brightness for each img in array
-'''
-def change_brightness(img_arr):
-  print('change brightness called')
-  adjusted_imgs = np.array([img_arr[0]])
-  for img_num in range(0, len(img_arr)):
-    img = img_arr[img_num]
-    print('ohhh this might not work as expected')
-    print('img is', img.shape)
-    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV) 
-    rando = np.random.uniform()
-    # print('rando is', rando)
-    hsv[:,:, 2] = hsv[:,:, 2].astype('float64') * (.4 + rando)
-    new_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-    # new_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2RGB)
-    # show_images(img.reshape((1,) + img.shape), new_img.reshape((1,) + new_img.shape))
-    adjusted_imgs = np.append(adjusted_imgs, new_img.reshape((1,) + new_img.shape), axis=0)
-
-  adjusted_imgs = np.delete(adjusted_imgs, 0, 0)
-  return adjusted_imgs
-
-def resize_imgs(img_arr, width, height, end=0):
-  # print('started')
-  resized_imgs = np.zeros([1, 64, 64, 3])
-  # print('resized_imgs shape', resized_imgs.shape)
-  
-  if end == 0:
-    end = img_arr.shape[0]
-  print('end is ', end)
-
-  count = 0
-  for i in range(0, end):
-    img = img_arr[i]
-    if count % 100 == 0:
-      print('count is', count)
-    resized = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    resized = cv2.resize(resized, (width, height))
-    #, interpolation=cv2.INTER_AREA
-    # print('resized is', resized.shape)
-    resized_imgs = np.append(resized_imgs, resized.reshape((1,) + resized.shape), axis=0)
-    count += 1
-
-  resized_imgs = np.delete(resized_imgs, 0, 0)
-  print('resized_imgs size', resized_imgs.shape)
-  return resized_imgs
-  # np.save(dest_file, resized_imgs)
-  # print('final shape', resized_imgs.shape)
-
-def crop_images(img_arr, low_bound, top_bound):
-  cropped_images = []
-  # count = 0
-  for i in range(0, len(img_arr)):
-    img = img_arr[i]
-    # if count < 10:
-    img = img[low_bound:top_bound]
-    # print('i is', count)
-    # print('image shape', img.shape)
-    cropped_images.append(img)
-    # count += 1
-  np_cropped = np.array(cropped_images)
-  print('cropped images is', np_cropped.shape)
-  # np.save(dest_file, np_cropped)
-  # print('dest file is', dest_file)
-  return np_cropped
 
 if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
@@ -247,13 +120,13 @@ if __name__ == "__main__":
   # print('X_val and y_val', X_val.shape, y_val.shape)
 
   imgs = X_train[0:3]
-  show_images(imgs, imgs)
+  show_images(imgs)
   changed_imgs = change_brightness(X_train[0:3])
-  show_images(changed_imgs, changed_imgs)
+  show_images(changed_imgs)
   cropped_imgs = crop_images(changed_imgs, 0, 80)
-  show_images(cropped_imgs, cropped_imgs)
-  resized_imgs = resize_imgs(cropped_imgs, 64, 64, 3)
-  show_images(resized_imgs, resized_imgs)
+  show_images(cropped_imgs)
+  resized_imgs = resize_images(cropped_imgs, 64, 64, 3)
+  show_images(resized_imgs)
   # model = make_model()
   # # print('model is', model)
   # model.fit_generator(
