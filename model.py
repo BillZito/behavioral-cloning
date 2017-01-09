@@ -76,23 +76,20 @@ def my_generator(X, y, batch_size, num_per_epoch):
     smaller = min(len(X), num_per_epoch)
     iterations = int(smaller/batch_size)
     for i in range(iterations):
-      # print('i is', i)
       X, y = shuffle(X, y)
       start, end = i * batch_size, (i + 1) * batch_size
       half_flip_X, half_flip_y = flip_half(X_train[start: end], y_train[start: end])
-      brightness_adjusted_X = change_brightness(half_flip_X)
-      yield (brightness_adjusted_X, half_flip_y)
+      brightness_adjusted_imgs = change_brightness(half_flip_X)
+      cropped_imgs = crop_images(brightness_adjusted_imgs, 0, 80)
+      resized_imgs = resize_images(cropped_imgs, 64, 64)
+      yield (resized_imgs, half_flip_y)
 
 
 if __name__ == "__main__":
-  # set up arg parser so that we can call python file with diff args
   parser = argparse.ArgumentParser(description='Model to train steering angles')
-  #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
   parser.add_argument('--epoch', type=int, default=3, help='Number of epochs.')
-  #initially set to 10k but since I only have 7k photos, set to 7k
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
-  #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'normalized_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'normalized_angles.npy', help='File where labels .npy found.')
@@ -102,44 +99,33 @@ if __name__ == "__main__":
   parser.set_defaults(loadweights=False)
   args = parser.parse_args()
 
-
   orig_features = np.load(args.features)
-  # print('orig features shape', orig_features.shape)
-  # change channels to be in right place
-  # orig_features = np.moveaxis(orig_features, 3, 1)
-  # print('after axis move', orig_features.shape)
-
   orig_labels = np.load(args.labels)
-  # print('orig labels shape', orig_labels.shape)
 
+  '''
+  split into training, validation, and set to right type
+  '''
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
-  # print('training model', args.destfile)
   y_train = y_train.astype(np.float)
   y_val = y_val.astype(np.float)
   print('X_train and y_train', X_train.shape, y_train.shape)
-  # print('X_val and y_val', X_val.shape, y_val.shape)
 
-  imgs = X_train[0:3]
-  show_images(imgs)
-  changed_imgs = change_brightness(X_train[0:3])
-  show_images(changed_imgs)
-  cropped_imgs = crop_images(changed_imgs, 0, 80)
-  show_images(cropped_imgs)
-  resized_imgs = resize_images(cropped_imgs, 64, 64, 3)
-  show_images(resized_imgs)
-  # model = make_model()
-  # # print('model is', model)
-  # model.fit_generator(
-  #   my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
-  #   nb_epoch=args.epoch, 
-  #   samples_per_epoch=args.epochsize,
-  #   validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
-  #   nb_val_samples=800)
 
-  # print('model successfully fit...', model)
+  '''
+  fit model to generated data
+  '''
+  model = make_model()
+  model.fit_generator(
+    my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
+    nb_epoch=args.epoch, 
+    samples_per_epoch=args.epochsize,
+    validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
+    nb_val_samples=800)
 
-  # #save the model
-  # model.save_weights(args.destfile + '.h5', True)
-  # # save weights as json
-  # with open(args.destfile + '.json', 'w') as outfile: 
-  #   json.dump(model.to_json(), outfile)
+  #save the model
+  print('saving model as', args.destfile)
+
+  model.save_weights(args.destfile + '.h5', True)
+  # save weights as json
+  with open(args.destfile + '.json', 'w') as outfile: 
+    json.dump(model.to_json(), outfile)

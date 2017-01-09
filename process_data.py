@@ -5,6 +5,7 @@ import random
 import numpy as np
 from scipy import misc
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 
 
 img_dir = 'data/bridge_recovery_2_IMG'
@@ -142,7 +143,7 @@ def show_images(img_arr):
   #for 25 random images, print them 
   print('shape', img_arr.shape)
   print('len', len(img_arr))
-  for img_num in range(0, 3):
+  for img_num in range(0, min(len(img_arr), 3)):
     print('img num is', img_num)
     img = img_arr[img_num]
     fig.add_subplot(3, 3, img_num + 1)
@@ -257,12 +258,10 @@ def flip_half(X, y):
 change the brightness for each img in array
 '''
 def change_brightness(img_arr):
-  print('change brightness called')
+  # print('change brightness called')
   adjusted_imgs = np.array([img_arr[0]])
   for img_num in range(0, len(img_arr)):
     img = img_arr[img_num]
-    print('ohhh this might not work as expected')
-    print('img is', img.shape)
     hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV) 
     rando = np.random.uniform()
     # print('rando is', rando)
@@ -279,31 +278,22 @@ def change_brightness(img_arr):
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 '''
 def resize_images(img_arr, width, height, end=0):
-  # print('started')
-  resized_imgs = np.zeros([1, 64, 64, 3])
   # print('resized_imgs shape', resized_imgs.shape)
-  
   if end == 0:
     end = img_arr.shape[0]
-  print('end is ', end)
 
-  count = 0
   for i in range(0, end):
     img = img_arr[i]
-    if count % 100 == 0:
-      print('count is', count)
-    resized = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    resized = cv2.resize(resized, (width, height))
-    #, interpolation=cv2.INTER_AREA
-    # print('resized is', resized.shape)
-    resized_imgs = np.append(resized_imgs, resized.reshape((1,) + resized.shape), axis=0)
-    count += 1
+    resized = cv2.resize(img, (width, height))
+    resized = resized.reshape((1,) + resized.shape)
 
-  resized_imgs = np.delete(resized_imgs, 0, 0)
-  print('resized_imgs size', resized_imgs.shape)
+    if i == 0:
+      resized_imgs = resized
+    else: 
+      resized_imgs = np.append(resized_imgs, resized, axis=0)
+    
+  # print('resized_imgs size', resized_imgs.shape)
   return resized_imgs
-  # np.save(dest_file, resized_imgs)
-  # print('final shape', resized_imgs.shape)
 
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
@@ -351,7 +341,7 @@ def crop_images(img_arr, low_bound, top_bound):
     cropped_images.append(img)
     # count += 1
   np_cropped = np.array(cropped_images)
-  print('cropped images is', np_cropped.shape)
+  # print('cropped images is', np_cropped.shape)
   # np.save(dest_file, np_cropped)
   # print('dest file is', dest_file)
   return np_cropped

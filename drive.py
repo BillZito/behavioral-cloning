@@ -14,6 +14,8 @@ from flask import Flask, render_template
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
 
+from process_data import show_images
+
 #set up socketio connection (to send info to driving simulator?)
 sio = socketio.Server()
 app = Flask(__name__)
@@ -38,21 +40,16 @@ def telemetry(sid, data):
     image_array = image_array[60:140]
 
     # resize to 64, 64 and put in shape [1, 64, 64, 3] for model prediction
-    image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
-
-    image_array = cv2.resize(image_array, (64, 64))   
-    # image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+    image_array = cv2.resize(image_array, (64, 64))
     image_array = np.array([image_array])
-    # image_array = np.moveaxis(image_array, 3, 1)
     
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     #changed from transformed image array since I do it myself... does our model predict doing the same things we defined?
     steering_angle = float(model.predict(image_array, batch_size=1))
 
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = .05
+    throttle = .3
     print('new steering angle is', steering_angle)
-    # print('new throttle is', throttle)
     send_control(steering_angle, throttle)
 
 # can change throttle and add additional images if we want....
