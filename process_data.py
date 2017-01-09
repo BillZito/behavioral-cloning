@@ -187,7 +187,7 @@ def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file):
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 '''
-def resize_img(img_src, dest_file, size, end=0):
+def resize_imgs(img_src, dest_file, size, end=0):
   # print('started')
   img_arr = np.load(img_src)
   resized_imgs = np.zeros([1, 64, 64, 3])
@@ -217,8 +217,8 @@ def resize_img(img_src, dest_file, size, end=0):
 if __name__ == '__main__':
   # show_np_images(src_file=np_dir + 'dcropped_1_3_combo_images.npy')
   # crop_images(img_src=np_dir + 'normalized_images.npy', dest_file=np_dir + 'dcropped_norm_images.npy', low_bound=0, top_bound=80)
-  resize_img(img_src=np_dir + 'dcropped_norm_images.npy', dest_file=np_dir + 'resized_norm_images.npy', size=64)
-  show_np_images(src_file=np_dir + 'resized_norm_images.npy')
+  # resize_imgs(img_src=np_dir + 'dcropped_norm_images.npy', dest_file=np_dir + 'resized_norm_images.npy', size=64)
+  # show_np_images(src_file=np_dir + 'resized_norm_images.npy')
   # plot_labels(np_dir + 'deleteme.npy')
 
   # zero_normalize(np_dir + '1_3_combo_angles_night_4th.npy', np_dir + 'cropped_1_3_combo_images_night_4th.npy', np_dir + 'normalized_angles.npy', np_dir + 'normalized_images.npy')

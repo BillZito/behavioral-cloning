@@ -133,14 +133,14 @@ def show_images(img_arr, flipped_arr):
   #for 25 random images, print them 
   print('shape', img_arr.shape)
   print('len', len(img_arr))
-  for img_num in range(len(img_arr)):
+  for img_num in range(0, 3):
     print('img num is', img_num)
     img = img_arr[img_num]
     flipped_img = flipped_arr[img_num]
 
-    fig.add_subplot(2, 2, img_num * 2 + 1)
+    fig.add_subplot(4, 4, img_num * 2 + 1)
     plt.imshow(img)
-    fig.add_subplot(2, 2, img_num * 2 + 2)
+    fig.add_subplot(4, 4, img_num * 2 + 2)
     plt.imshow(flipped_img)
   
   plt.show()
@@ -149,10 +149,13 @@ def show_images(img_arr, flipped_arr):
 change the brightness for each img in array
 '''
 def change_brightness(img_arr):
-  # print('change brightness called')
+  print('change brightness called')
   adjusted_imgs = np.array([img_arr[0]])
-  for img in img_arr:
-    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+  for img_num in range(0, len(img_arr)):
+    img = img_arr[img_num]
+    print('ohhh this might not work as expected')
+    print('img is', img.shape)
+    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV) 
     rando = np.random.uniform()
     # print('rando is', rando)
     hsv[:,:, 2] = hsv[:,:, 2].astype('float64') * (.4 + rando)
@@ -164,20 +167,63 @@ def change_brightness(img_arr):
   adjusted_imgs = np.delete(adjusted_imgs, 0, 0)
   return adjusted_imgs
 
+def resize_imgs(img_arr, width, height, end=0):
+  # print('started')
+  resized_imgs = np.zeros([1, 64, 64, 3])
+  # print('resized_imgs shape', resized_imgs.shape)
+  
+  if end == 0:
+    end = img_arr.shape[0]
+  print('end is ', end)
+
+  count = 0
+  for i in range(0, end):
+    img = img_arr[i]
+    if count % 100 == 0:
+      print('count is', count)
+    resized = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    resized = cv2.resize(resized, (width, height))
+    #, interpolation=cv2.INTER_AREA
+    # print('resized is', resized.shape)
+    resized_imgs = np.append(resized_imgs, resized.reshape((1,) + resized.shape), axis=0)
+    count += 1
+
+  resized_imgs = np.delete(resized_imgs, 0, 0)
+  print('resized_imgs size', resized_imgs.shape)
+  return resized_imgs
+  # np.save(dest_file, resized_imgs)
+  # print('final shape', resized_imgs.shape)
+
+def crop_images(img_arr, low_bound, top_bound):
+  cropped_images = []
+  # count = 0
+  for i in range(0, len(img_arr)):
+    img = img_arr[i]
+    # if count < 10:
+    img = img[low_bound:top_bound]
+    # print('i is', count)
+    # print('image shape', img.shape)
+    cropped_images.append(img)
+    # count += 1
+  np_cropped = np.array(cropped_images)
+  print('cropped images is', np_cropped.shape)
+  # np.save(dest_file, np_cropped)
+  # print('dest file is', dest_file)
+  return np_cropped
 
 if __name__ == "__main__":
   # set up arg parser so that we can call python file with diff args
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   #didn't include port options since dont need to run on server
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=6, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=3, help='Number of epochs.')
   #initially set to 10k but since I only have 7k photos, set to 7k
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   #confused by help--just skips validation when fit model right?
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'resized_norm_images.npy', help='File where features .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'normalized_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'normalized_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_11', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_12', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -200,21 +246,27 @@ if __name__ == "__main__":
   print('X_train and y_train', X_train.shape, y_train.shape)
   # print('X_val and y_val', X_val.shape, y_val.shape)
 
-  # change_brightness(X_train[0:3])
+  imgs = X_train[0:3]
+  show_images(imgs, imgs)
+  changed_imgs = change_brightness(X_train[0:3])
+  show_images(changed_imgs, changed_imgs)
+  cropped_imgs = crop_images(changed_imgs, 0, 80)
+  show_images(cropped_imgs, cropped_imgs)
+  resized_imgs = resize_imgs(cropped_imgs, 64, 64, 3)
+  show_images(resized_imgs, resized_imgs)
+  # model = make_model()
+  # # print('model is', model)
+  # model.fit_generator(
+  #   my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
+  #   nb_epoch=args.epoch, 
+  #   samples_per_epoch=args.epochsize,
+  #   validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
+  #   nb_val_samples=800)
 
-  model = make_model()
-  # print('model is', model)
-  model.fit_generator(
-    my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
-    nb_epoch=args.epoch, 
-    samples_per_epoch=args.epochsize,
-    validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
-    nb_val_samples=800)
+  # print('model successfully fit...', model)
 
-  print('model successfully fit...', model)
-
-  #save the model
-  model.save_weights(args.destfile + '.h5', True)
-  # save weights as json
-  with open(args.destfile + '.json', 'w') as outfile: 
-    json.dump(model.to_json(), outfile)
+  # #save the model
+  # model.save_weights(args.destfile + '.h5', True)
+  # # save weights as json
+  # with open(args.destfile + '.json', 'w') as outfile: 
+  #   json.dump(model.to_json(), outfile)
