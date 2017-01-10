@@ -77,19 +77,29 @@ def combine_labels(first_src, second_src, dest_file):
 '''
 combine left, center, and right images and save to .npy file
 '''
-def lr_augment(src_dir, dest_file):
+def lr_augment(src_dir, dest_file, start_ind):
+  print('starting at index', start_ind)
   img_list = os.listdir(src_dir)
 
   count = 0
   # load images from file 
-  for index, img_name in enumerate(img_list):
-    if index % 100 == 0:
-      print('count is ', index)
+  for index, img_name in enumerate(img_list, start=start_ind):
       
     if img_name.startswith('left'):
       count += 1
-      if count > 3:
-        break
+      if count % 500 == 2:
+        print('index', index, 'and count', count)
+        try:
+          prev_images = np.load(dest_file)
+          print('found old file')
+          now_images = np.append(prev_images, concatted_imgs, axis=0)
+          np.save(dest_file, now_images)
+          print('saved new file')
+          concatted_imgs = last_img
+        except IOError:
+          print('no images found, saving to file')
+          np.save(dest_file, concatted_imgs)
+
       center_name = img_name.replace('left', 'center')
       right_name = img_name.replace('left', 'right')
 
@@ -101,8 +111,11 @@ def lr_augment(src_dir, dest_file):
       img = np.concatenate((left_img, center_img, right_img), axis=1)
       if 'concatted_imgs' in locals():
         concatted_imgs = np.append(concatted_imgs, img.reshape((1,) + img.shape), axis=0)
+        if count % 500 == 3:
+          concatted_imgs = np.delete(concatted_imgs, 0, 0)
       else:
         concatted_imgs = img.reshape((1,) + img.shape)
+        last_img = img.reshape((1,) + img.shape)
 
   # save to dest file
   np.save(dest_file, concatted_imgs)
@@ -392,12 +405,21 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 
 
 if __name__ == '__main__':
-  img_dir = 'data/images/norm_and_correct_each_track_IMG'
-  csv_dir = 'data/logs/norm_and_correct_each_track_driving_logs.csv'
+  img_dir = 'data/images/udacity_IMG'
+  csv_dir = 'data/logs/udacity_driving_logs.csv'
   np_dir = 'data/np_data/'
 
-  combo_images = lr_augment(img_dir, np_dir + 'lrc_norm_and_correct.npy')
-  show_images(combo_images)
+  combo_images = lr_augment(img_dir, np_dir + 'lrc_norm_and_correct.npy', 0)
+  show_npfile_images(np_dir + 'lrc_norm_and_correct.npy')
+  # show_images_(combo_images)
+  # b = np.fromfile(np_dir + 'lrc_norm_and_correct.npy')
+  # print(b.shape)
+  # with open(np_dir + "lrc_norm_and_correct.npy", "rb") as npy:
+  #   a = np.load(npy)
+  #   print('a')
+  # print('shape', test_imgs[0])
+  # crop_file_images(np_dir + 'lrc_norm_and_correct.npy', np_dir + 'cropped_lrc_norm_and_correct.npy', 20, 100)
+  # zero_normalize(np_dir + 'norm_and_correct_angles.npy', np_dir + 'cropped_lrc_norm_and_correct.npy', np_dir + 'norm_concat_angles.npy', np_dir + 'norm_concat_images.npy')
   # show_npfile_images(src_file=np_dir + 'dcropped_1_3_combo_images.npy')
   # crop_file_images(img_src=np_dir + 'normalized_images.npy', dest_file=np_dir + 'dcropped_norm_images.npy', low_bound=0, top_bound=80)
   # resize_file_images(img_src=np_dir + 'dcropped_norm_images.npy', dest_file=np_dir + 'resized_norm_images.npy', size=64)
