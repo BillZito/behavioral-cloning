@@ -88,11 +88,11 @@ def my_generator(X, y, batch_size, num_per_epoch):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=4, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=6, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=10000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'resized_udacity_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'udacity_combo_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_combo_angles.npy', help='File where labels .npy found.')
   parser.add_argument('--destfile', type=str, default=model_dir + 'generator_14', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)

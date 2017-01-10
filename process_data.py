@@ -249,23 +249,25 @@ def count_images(img_dir):
 '''
 remove 3/4 of zero values since zeros are 50x larger than other data points currently
 '''
-def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file):
-  labels = np.load(angles_src)
+def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file, start=0):
+  labels = np.load(angles_src).astype(float)
   images = np.load(images_src)
   print('initial shapes', labels.shape, images.shape)
   normalized_labels = np.array([labels[0]])
   normalized_images = np.array([images[0]])
 
+  index = 0
   deleted_count = 0
-  for index, val in np.ndenumerate(labels.astype(float)): 
-    # print('index is', index[0], 'val', val)
-    if index[0] % 100 == 0: 
+  for index in range(start, images.shape[0]): 
+    val = labels[index]
+    # print('index is', index, 'val', val)
+    if index % 100 == 0: 
       print('now on index', index)
 
     random_num = random.randint(1, 100)
 
     if val != 0 or random_num < 25:
-      normalized_labels = np.append(normalized_labels, np.array([labels[index]]), axis=0)
+      normalized_labels = np.append(normalized_labels, np.array([val]), axis=0)
       normalized_images = np.append(normalized_images, np.array([images[index]]), axis=0)
       if normalized_labels.shape[0] % 100 == 0:
         print('now labels', normalized_labels.shape[0])
@@ -371,26 +373,24 @@ resize given images to 64x64-- reducing fidelity improves model speed and perfor
 def resize_file_images(img_src, dest_file, size, start=0, end=0):
   # print('started')
   img_arr = np.load(img_src)
-  resized_imgs = np.zeros([1, 64, 64, 3])
   # print('resized_imgs shape', resized_imgs.shape)
   
   if end == 0:
     end = img_arr.shape[0]
-  print('end is ', end)
 
-  count = 0
   for i in range(start, end):
-    img = img_arr[i]
-    if count % 100 == 0:
-      print('count is', count)
-    resized = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    resized = cv2.resize(resized, (size, size))
-    #, interpolation=cv2.INTER_AREA
-    # print('resized is', resized.shape)
-    resized_imgs = np.append(resized_imgs, resized.reshape((1,) + resized.shape), axis=0)
-    count += 1
+    if i % 100 == 0:
+      print('index is', i)
 
-  resized_imgs = np.delete(resized_imgs, 0, 0)
+    img = img_arr[i]
+    resized = cv2.resize(img, (size, size))
+    resized = resized.reshape((1,) + resized.shape)
+
+    if i == start:
+      resized_imgs = resized
+    else: 
+      resized_imgs = np.append(resized_imgs, resized, axis=0)
+
   np.save(dest_file, resized_imgs)
   print('final shape', resized_imgs.shape, 'saved to', dest_file)
 
@@ -439,16 +439,26 @@ if __name__ == '__main__':
   csv_dir = 'data/logs/udacity_driving_logs.csv'
   np_dir = 'data/np_data/'
   # show_npfile_images(np_dir + 'udacity_images.npy', np_dir + 'udacity_final_lr_images.npy')
-  # crop_file_images(np_dir + 'udacity_final_lr_images.npy', np_dir + 'cropped_udacity_images.npy', 20, 100)
-  resize_file_images(np_dir + 'cropped_udacity_images.npy', np_dir + 'fourth_resized_udacity_images.npy', 64, 6000)
-  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'resized_udacity_images.npy', np_dir + 'udacity_norm_angles.npy', np_dir + 'udacity_norm_images.npy')
-
+  # crop_file_images(np_dir + 'udacity_final_lr_images.npy', np_dir + 'new_cropped_udacity_images.npy', 60, 140)
+  # resize_file_images(np_dir + 'new_cropped_udacity_images.npy', np_dir + 'first_resized_udacity_images.npy', 64, 0, 2000)
+  # resize_file_images(np_dir + 'new_cropped_udacity_images.npy', np_dir + 'second_resized_udacity_images.npy', 64, 2000, 4000)
+  # resize_file_images(np_dir + 'new_cropped_udacity_images.npy', np_dir + 'third_resized_udacity_images.npy', 64, 4000, 6000)
+  # resize_file_images(np_dir + 'new_cropped_udacity_images.npy', np_dir + 'fourth_resized_udacity_images.npy', 64, 6000)
+  # show_npfile_images(np_dir + 'third_resized_udacity_images.npy', np_dir + 'fourth_resized_udacity_images.npy')
+  
+  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'first_resized_udacity_images.npy', np_dir + 'first_udacity_norm_angles.npy', np_dir + 'first_udacity_norm_images.npy')
+  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'second_resized_udacity_images.npy', np_dir + 'second_udacity_norm_angles.npy', np_dir + 'second_udacity_norm_images.npy')
+  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'third_resized_udacity_images.npy', np_dir + 'third_udacity_norm_angles.npy', np_dir + 'third_udacity_norm_images.npy')
+  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'fourth_resized_udacity_images.npy', np_dir + 'fourth_udacity_norm_angles.npy', np_dir + 'fourth_udacity_norm_images.npy')
+  # show_npfile_images(np_dir + 'first_udacity_norm_images.npy', np_dir + 'fourth_udacity_norm_images.npy')
+  # show_npfile_images(np_dir + 'first_udacity_norm_images.npy', np_dir + 'second_udacity_norm_images.npy')
   # combo_images = lr_augment(img_dir, np_dir + 'test_images.npy')
   # show_images(combo_images)
+  # combine_images(np_dir + 'first_udacity_norm_images.npy', np_dir + 'second_udacity_norm_images.npy', np_dir + 'udacity_combo_images.npy')
+  # show_npfile_images(np_dir + 'udacity_combo_images.npy', np_dir + 'udacity_combo_images.npy')
+  # combine_labels(np_dir + 'first_udacity_norm_angles.npy', np_dir + 'second_udacity_norm_angles.npy', np_dir + 'udacity_combo_angles.npy')
+  # combine_labels(np_dir + 'udacity_combo_angles.npy', np_dir + 'third_udacity_norm_angles.npy', np_dir + 'udacity_combo_angles.npy')
+  # combine_labels(np_dir + 'udacity_combo_angles.npy', np_dir + 'fourth_udacity_norm_angles.npy', np_dir + 'udacity_combo_angles.npy')
 
 
-  # show_npfile_images(src_file=np_dir + 'dcropped_1_3_combo_images.npy')
-  # crop_file_images(img_src=np_dir + 'normalized_images.npy', dest_file=np_dir + 'dcropped_norm_images.npy', low_bound=0, top_bound=80)
-  # resize_file_images(img_src=np_dir + 'dcropped_norm_images.npy', dest_file=np_dir + 'resized_norm_images.npy', size=64)
-  # plot_labels(np_dir + 'deleteme.npy')
-  # zero_normalize(np_dir + '1_3_combo_angles_night_4th.npy', np_dir + 'cropped_1_3_combo_images_night_4th.npy', np_dir + 'normalized_angles.npy', np_dir + 'normalized_images.npy')
+
