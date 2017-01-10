@@ -18,7 +18,8 @@ Combine labels and same them .npy file.
 '''
 save all images to file
 '''
-def save_images(dest_file):
+def save_center_images(img_dir, dest_file):
+  img_list = os.listdir(img_dir)
   #add each to img_combo
   for img_name in img_list:
     if img_name.startswith('center'):
@@ -77,49 +78,61 @@ def combine_labels(first_src, second_src, dest_file):
 '''
 combine left, center, and right images and save to .npy file
 '''
-def lr_augment(src_dir, dest_file, start_ind):
-  print('starting at index', start_ind)
+def lr_augment(src_dir, dest_file):
+  print('starting at i')
   img_list = os.listdir(src_dir)
 
-  count = 0
-  # load images from file 
-  for index, img_name in enumerate(img_list, start=start_ind):
-      
+  l_count = 0
+  # for each image, start with left and concat to center and right
+  for img_name in img_list:
     if img_name.startswith('left'):
-      count += 1
-      if count % 500 == 2:
-        print('index', index, 'and count', count)
-        try:
-          prev_images = np.load(dest_file)
-          print('found old file')
-          now_images = np.append(prev_images, concatted_imgs, axis=0)
-          np.save(dest_file, now_images)
-          print('saved new file')
-          concatted_imgs = last_img
-        except IOError:
-          print('no images found, saving to file')
-          np.save(dest_file, concatted_imgs)
-
-      center_name = img_name.replace('left', 'center')
-      right_name = img_name.replace('left', 'right')
-
-      left_img = misc.imread(src_dir + '/' + img_name)
-      center_img = misc.imread(src_dir + '/' + center_name)
-      right_img = misc.imread(src_dir + '/' + right_name)
-
-      #maybe can combine into 1
-      img = np.concatenate((left_img, center_img, right_img), axis=1)
-      if 'concatted_imgs' in locals():
-        concatted_imgs = np.append(concatted_imgs, img.reshape((1,) + img.shape), axis=0)
-        if count % 500 == 3:
-          concatted_imgs = np.delete(concatted_imgs, 0, 0)
-      else:
+      
+      img = concat(img_name, src_dir)
+      
+      if l_count == 0: 
         concatted_imgs = img.reshape((1,) + img.shape)
-        last_img = img.reshape((1,) + img.shape)
+      elif l_count % 500 == 1:
+        print('l_count', l_count)
+        save_concat(concatted_imgs, dest_file)
+        concatted_imgs = img.reshape((1,) + img.shape)
+      else:
+        concatted_imgs = np.append(concatted_imgs, img.reshape((1,) + img.shape), axis=0)
+        if l_count % 500 == 2:
+          #remove the first one that is only there as default
+          concatted_imgs = np.delete(concatted_imgs, 0, 0)
 
-  # save to dest file
-  np.save(dest_file, concatted_imgs)
-  return concatted_imgs
+      l_count += 1
+
+  save_concat(concatted_imgs, dest_file)
+  print('saved all imgs')
+
+'''
+concats left, center, and right images
+'''
+def concat(img_name, src_dir):
+  center_name = img_name.replace('left', 'center')
+  right_name = img_name.replace('left', 'right')
+
+  left_img = misc.imread(src_dir + '/' + img_name)
+  center_img = misc.imread(src_dir + '/' + center_name)
+  right_img = misc.imread(src_dir + '/' + right_name)
+
+  img = np.concatenate((left_img, center_img, right_img), axis=1)
+  return img
+
+'''
+saves passed in images to end of current list of concatted files
+'''
+def save_concat(concatted_imgs, dest_file):
+  try:
+    prev_images = np.load(dest_file)
+    print('found old file', prev_images.shape)
+    now_images = np.append(prev_images, concatted_imgs, axis=0)
+    np.save(dest_file, now_images)
+    print('saved new file', now_images.shape)
+  except IOError:
+    print('no images found, saving to file', concatted_imgs.shape)
+    np.save(dest_file, concatted_imgs)
 
 '''
 ##########################################################################
@@ -155,20 +168,23 @@ def show_file_images(filename, img_list):
 '''
 read in 9 random images from numpy file and visualize
 '''
-def show_npfile_images(src_file):
+def show_npfile_images(src_file, second_src):
   fig = plt.figure()
   img_arr = np.load(src_file)
-  print('imgarr size', img_arr.shape)
+  flipped_arr = np.load(second_src)
+  print('imgarr size', img_arr.shape, flipped_arr.shape)
   #for 9 random images, print them 
-  for img_num in range(1, 10):
-    print('img arr shape', img_arr.shape)
+  for img_num in range(1, 5):
     random_num = random.randint(0, img_arr.shape[0] - 1)
+    print('img num', img_num, 'image is at', random_num )
+
     img = img_arr[random_num]
-    # print('img is', img.shape)
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    print('image is at', random_num )
-    fig.add_subplot(3, 3, img_num)
+    fig.add_subplot(3, 3, img_num * 2 - 1)
     plt.imshow(img)
+
+    flipped_img = flipped_arr[random_num]
+    fig.add_subplot(3, 3, img_num * 2)
+    plt.imshow(flipped_img)
   
   plt.show()
 
@@ -177,20 +193,17 @@ show images to test that flipping correct
 '''
 def show_images(img_arr):
   fig = plt.figure()
-
-  #for 25 random images, print them 
   print('shape', img_arr.shape)
-  print('len', len(img_arr))
+  
   for img_num in range(0, min(len(img_arr), 3)):
     print('img num is', img_num)
     img = img_arr[img_num]
-    fig.add_subplot(3, 3, img_num + 1)
+    fig.add_subplot(3, 3, img_num * 2 + 1)
     plt.imshow(img)
-    # if flipped_arr: 
-    #   flipped_img = flipped_arr[img_num]
-    #   fig.add_subplot(4, 4, img_num * 2 + 2)
-    #   plt.imshow(flipped_img)
-  
+    # flipped_img = flipped_arr[img_num]
+    # fig.add_subplot(3, 3, img_num * 2 + 2)
+    # plt.imshow(flipped_img)
+
   plt.show()
 
 
@@ -206,7 +219,25 @@ def plot_labels(src_file):
   plt.hist(x=labels.astype(int), range=(-50, 50), bins=101)
   plt.show()
 
-
+'''
+ouptut how many of l/r/or center images
+'''
+def count_images(img_dir):
+  #add each to img_combo
+  img_list = os.listdir(img_dir)
+  l_count = 0
+  c_count = 0
+  r_count =0
+  for img_name in img_list:
+    if img_name.startswith('center'):
+      c_count += 1
+    elif img_name.startswith('left'):
+      l_count += 1
+    elif img_name.startswith('right'):
+      r_count +=1
+      # img = misc.imread(img_dir + '/' + img_name)
+      # img_combo.append(img)
+  print('counts l, c, r:', l_count, c_count, r_count)
 
 '''
 ##########################################################################
@@ -315,7 +346,7 @@ def change_brightness(img_arr):
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 '''
-def resize_images(img_arr, width, height, end=0):
+def resize_images(img_arr, width, height, end=2000):
   # print('resized_imgs shape', resized_imgs.shape)
   if end == 0:
     end = img_arr.shape[0]
@@ -337,7 +368,7 @@ def resize_images(img_arr, width, height, end=0):
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 (from file)
 '''
-def resize_file_images(img_src, dest_file, size, end=0):
+def resize_file_images(img_src, dest_file, size, start=0, end=0):
   # print('started')
   img_arr = np.load(img_src)
   resized_imgs = np.zeros([1, 64, 64, 3])
@@ -348,7 +379,7 @@ def resize_file_images(img_src, dest_file, size, end=0):
   print('end is ', end)
 
   count = 0
-  for i in range(0, end):
+  for i in range(start, end):
     img = img_arr[i]
     if count % 100 == 0:
       print('count is', count)
@@ -360,9 +391,8 @@ def resize_file_images(img_src, dest_file, size, end=0):
     count += 1
 
   resized_imgs = np.delete(resized_imgs, 0, 0)
-  print('resized_imgs size', resized_imgs.shape)
   np.save(dest_file, resized_imgs)
-  print('final shape', resized_imgs.shape)
+  print('final shape', resized_imgs.shape, 'saved to', dest_file)
 
 '''
 crop images to remove content above horizon and hood of car
@@ -408,29 +438,17 @@ if __name__ == '__main__':
   img_dir = 'data/images/udacity_IMG'
   csv_dir = 'data/logs/udacity_driving_logs.csv'
   np_dir = 'data/np_data/'
+  # show_npfile_images(np_dir + 'udacity_images.npy', np_dir + 'udacity_final_lr_images.npy')
+  # crop_file_images(np_dir + 'udacity_final_lr_images.npy', np_dir + 'cropped_udacity_images.npy', 20, 100)
+  resize_file_images(np_dir + 'cropped_udacity_images.npy', np_dir + 'fourth_resized_udacity_images.npy', 64, 6000)
+  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'resized_udacity_images.npy', np_dir + 'udacity_norm_angles.npy', np_dir + 'udacity_norm_images.npy')
 
-  combo_images = lr_augment(img_dir, np_dir + 'lrc_norm_and_correct.npy', 0)
-  show_npfile_images(np_dir + 'lrc_norm_and_correct.npy')
-  # show_images_(combo_images)
-  # b = np.fromfile(np_dir + 'lrc_norm_and_correct.npy')
-  # print(b.shape)
-  # with open(np_dir + "lrc_norm_and_correct.npy", "rb") as npy:
-  #   a = np.load(npy)
-  #   print('a')
-  # print('shape', test_imgs[0])
-  # crop_file_images(np_dir + 'lrc_norm_and_correct.npy', np_dir + 'cropped_lrc_norm_and_correct.npy', 20, 100)
-  # zero_normalize(np_dir + 'norm_and_correct_angles.npy', np_dir + 'cropped_lrc_norm_and_correct.npy', np_dir + 'norm_concat_angles.npy', np_dir + 'norm_concat_images.npy')
+  # combo_images = lr_augment(img_dir, np_dir + 'test_images.npy')
+  # show_images(combo_images)
+
+
   # show_npfile_images(src_file=np_dir + 'dcropped_1_3_combo_images.npy')
   # crop_file_images(img_src=np_dir + 'normalized_images.npy', dest_file=np_dir + 'dcropped_norm_images.npy', low_bound=0, top_bound=80)
   # resize_file_images(img_src=np_dir + 'dcropped_norm_images.npy', dest_file=np_dir + 'resized_norm_images.npy', size=64)
-  # show_np_images(src_file=np_dir + 'resized_norm_images.npy')
   # plot_labels(np_dir + 'deleteme.npy')
-
   # zero_normalize(np_dir + '1_3_combo_angles_night_4th.npy', np_dir + 'cropped_1_3_combo_images_night_4th.npy', np_dir + 'normalized_angles.npy', np_dir + 'normalized_images.npy')
-  # zero_normalize(np_dir + 'udacity_angles.npy', np_dir + 'cropped_udacity_images.npy', np_dir + 'udacity_normalized_angles.npy', np_dir + 'udacity_normalized_images.npy')
-  # show_file_images(img_dir + '/', img_list)
-  # save_images(np_dir + '1_3_bridge_recovery_2_images.npy') 
-  # save_csv(np_dir + '1_3_bridge_recovery_2_angles.npy')
-  # combine_labels(np_dir + '1_3_bridge_recovery_2_angles.npy', np_dir + '1_3_combo_angles_night_3rd.npy', np_dir + '1_3_combo_angles_night_4th.npy')
-  # combine_images(np_dir + '1_3_bridge_recovery_2_images.npy', np_dir + '1_3_combo_images_night_3rd.npy', np_dir + '1_3_combo_images_night_4th.npy')
-  # print('hello world')
