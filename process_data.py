@@ -8,13 +8,6 @@ import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
 
-img_dir = 'data/bridge_recovery_2_IMG'
-csv_dir = 'data/bridge_recovery_2_driving_log.csv'
-np_dir = 'data/np_data/'
-img_list = os.listdir(img_dir)
-img_combo = []
-
-
 '''
 ##########################################################################
 Combine images and save them to .npy file.
@@ -81,7 +74,39 @@ def combine_labels(first_src, second_src, dest_file):
   print('combined labels shape', combo_angles.shape)
   np.save(dest_file, combo_angles)
 
+'''
+combine left, center, and right images and save to .npy file
+'''
+def lr_augment(src_dir, dest_file):
+  img_list = os.listdir(src_dir)
 
+  count = 0
+  # load images from file 
+  for index, img_name in enumerate(img_list):
+    if index % 100 == 0:
+      print('count is ', index)
+      
+    if img_name.startswith('left'):
+      count += 1
+      if count > 3:
+        break
+      center_name = img_name.replace('left', 'center')
+      right_name = img_name.replace('left', 'right')
+
+      left_img = misc.imread(src_dir + '/' + img_name)
+      center_img = misc.imread(src_dir + '/' + center_name)
+      right_img = misc.imread(src_dir + '/' + right_name)
+
+      #maybe can combine into 1
+      img = np.concatenate((left_img, center_img, right_img), axis=1)
+      if 'concatted_imgs' in locals():
+        concatted_imgs = np.append(concatted_imgs, img.reshape((1,) + img.shape), axis=0)
+      else:
+        concatted_imgs = img.reshape((1,) + img.shape)
+
+  # save to dest file
+  np.save(dest_file, concatted_imgs)
+  return concatted_imgs
 
 '''
 ##########################################################################
@@ -265,7 +290,7 @@ def change_brightness(img_arr):
     hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV) 
     rando = np.random.uniform()
     # print('rando is', rando)
-    hsv[:,:, 2] = hsv[:,:, 2].astype('float64') * (.4 + rando)
+    hsv[:,:, 2] = hsv[:,:, 2].astype('float64') * (.25 + rando)
     new_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
     # new_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2RGB)
     # show_images(img.reshape((1,) + img.shape), new_img.reshape((1,) + new_img.shape))
@@ -367,6 +392,12 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 
 
 if __name__ == '__main__':
+  img_dir = 'data/images/norm_and_correct_each_track_IMG'
+  csv_dir = 'data/logs/norm_and_correct_each_track_driving_logs.csv'
+  np_dir = 'data/np_data/'
+
+  combo_images = lr_augment(img_dir, np_dir + 'lrc_norm_and_correct.npy')
+  show_images(combo_images)
   # show_npfile_images(src_file=np_dir + 'dcropped_1_3_combo_images.npy')
   # crop_file_images(img_src=np_dir + 'normalized_images.npy', dest_file=np_dir + 'dcropped_norm_images.npy', low_bound=0, top_bound=80)
   # resize_file_images(img_src=np_dir + 'dcropped_norm_images.npy', dest_file=np_dir + 'resized_norm_images.npy', size=64)
@@ -380,4 +411,4 @@ if __name__ == '__main__':
   # save_csv(np_dir + '1_3_bridge_recovery_2_angles.npy')
   # combine_labels(np_dir + '1_3_bridge_recovery_2_angles.npy', np_dir + '1_3_combo_angles_night_3rd.npy', np_dir + '1_3_combo_angles_night_4th.npy')
   # combine_images(np_dir + '1_3_bridge_recovery_2_images.npy', np_dir + '1_3_combo_images_night_3rd.npy', np_dir + '1_3_combo_images_night_4th.npy')
-  print('hello world')
+  # print('hello world')
