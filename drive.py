@@ -35,7 +35,7 @@ def telemetry(sid, data):
     speed = data["speed"]
     # The current image from the center camera of the car
     imgString = data["image"]
-    print('data is', data)
+    # print('data is', data)
     # center_name = img_name.replace('left', 'center')
     # right_name = img_name.replace('left', 'right')
 
@@ -60,7 +60,7 @@ def telemetry(sid, data):
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
     throttle = .1
     print('new steering angle is', steering_angle)
-    # send_control(steering_angle, throttle)
+    send_control(steering_angle, throttle)
 
 # can change throttle and add additional images if we want....
 

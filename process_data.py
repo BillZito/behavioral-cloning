@@ -21,11 +21,16 @@ save all images to file
 def save_images(img_dir, dest_file):
   img_list = os.listdir(img_dir)
   img_combo = []
-  #add each to img_combo
+
+  count = 0
   for img_name in img_list:
     if not img_name.startswith('.'):
+      if count % 500 == 0:
+        print('count is', count)
+
       img = misc.imread(img_dir + '/' + img_name)
       img_combo.append(img)
+      count += 1
 
   #cast to numpy array and save to file
   all_images = np.array(img_combo)
@@ -66,15 +71,18 @@ def save_csv_lrc(csv_dir, dest_file):
     # print('newval', title)
     steering_angle = float(row[3])
     all_angles.append(steering_angle)
-
+  print('done with center', len(all_angles))
+  
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader:
-    steering_angle = float(row[3]) - .25
+    steering_angle = float(row[3]) + .25
+    print('steering angle is', steering_angle)
     all_angles.append(steering_angle)
+  print('done with left', len(all_angles))
 
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader: 
-    steering_angle = float(row[3]) + .25
+    steering_angle = float(row[3]) - .25
     all_angles.append(steering_angle)
 
   np_angles = np.array(all_angles)
@@ -246,12 +254,12 @@ def show_image(img):
 plot labels to understand their distribution
 '''
 def plot_labels(src_file):
-  labels = np.load(src_file)
+  labels = np.load(src_file).astype(float)
   # print('lables start', labels)
-  labels = np.multiply(labels.astype(float), 100)
+  labels = np.multiply(labels, 100)
   # print('after mult, labels are', labels)
   # print('as int, labels are', labels.astype(int))
-  plt.hist(x=labels.astype(int), range=(-50, 50), bins=101)
+  plt.hist(x=labels.astype(int), range=(-100, 100), bins=201)
   plt.show()
 
 '''
@@ -285,7 +293,7 @@ def count_images(img_dir):
 remove 3/4 of zero values since zeros are 50x larger than other data points currently
 '''
 def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file, start=0):
-  labels = np.load(angles_src).astype(float)
+  labels = np.load(angles_src)
   images = np.load(images_src)
   print('initial shapes', labels.shape, images.shape)
   normalized_labels = np.array([labels[0]])
@@ -293,22 +301,22 @@ def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file, s
 
   index = 0
   deleted_count = 0
-  for index in range(start, images.shape[0]): 
+  for index in range(start, start + images.shape[0]): 
     val = labels[index]
-    # print('index is', index, 'val', val)
-    if index % 100 == 0: 
+    # print('val', val)
+    if index % 500 == 0: 
       print('now on index', index)
 
     random_num = random.randint(1, 100)
 
     if val != 0 or random_num < 25:
       normalized_labels = np.append(normalized_labels, np.array([val]), axis=0)
-      normalized_images = np.append(normalized_images, np.array([images[index]]), axis=0)
-      if normalized_labels.shape[0] % 100 == 0:
+      normalized_images = np.append(normalized_images, np.array([images[index - start]]), axis=0)
+      if normalized_labels.shape[0] % 500 == 0:
         print('now labels', normalized_labels.shape[0])
     else:
       deleted_count += 1
-      if deleted_count % 100 == 0:
+      if deleted_count % 500 == 0:
         print('deleted count now', deleted_count)
 
   print('0s deleted', deleted_count)
@@ -443,7 +451,11 @@ def resize_all(src_file, np_dir, dest_name, size):
     resize_file_images(src_file, np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, size, last_start, i)
     last_start = i
 
-  #combine all
+  #combine last set
+  print('end is ', end, 'last start is', last_start)
+  if (end - last_start != 2000):
+    print('resizing to', np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, 'range', last_start, end)
+    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, size, last_start, end)
   print('resized all')
 
 '''
@@ -487,8 +499,8 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 
 
 if __name__ == '__main__':
-  img_dir = 'data/images/norm_and_correct_each_track_IMG'
-  csv_dir = 'data/logs/norm_and_correct_each_track_driving_log.csv'
+  img_dir = 'data/images/my_IMG'
+  csv_dir = 'data/logs/my_driving_log.csv'
   np_dir = 'data/np_data/'
 
   # for each img in norm and correct, save it to .npy
@@ -498,24 +510,37 @@ if __name__ == '__main__':
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
   # save_csv_lrc(csv_dir, np_dir + 'lrc_angles.npy')
+  # plot_labels(np_dir + 'lrc_angles.npy')
+
 
   #crop images, print to make sure fine
   # crop_file_images(np_dir + 'lrc_images.npy', np_dir + 'c_lrc_images.npy', 60, 140)
   # show_npfile_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_images.npy')
 
   #resize them, print to make sure fine
+  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_1_images.npy', 64, 0, 2000)
+  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_2_images.npy', 64, 2000, 4000)
+  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_3_images.npy', 64, 4000, 7000)
+  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   # resize_all(np_dir + 'c_lrc_images.npy', np_dir, 'test.npy', 64)
   # show_npfile_images(np_dir + 'c_lrc_4_images.npy', np_dir + 'c_lrc_5_images.npy')
   
   #normalize images and csv and show
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_5_images.npy', np_dir + 'n_lrc_5_angles.npy', np_dir + 'n_lrc_5_images.npy')
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_4_images.npy', np_dir + 'n_lrc_4_angles.npy', np_dir + 'n_lrc_4_images.npy')
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_3_images.npy', np_dir + 'n_lrc_3_angles.npy', np_dir + 'n_lrc_3_images.npy')
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_2_images.npy', np_dir + 'n_lrc_2_angles.npy', np_dir + 'n_lrc_2_images.npy')
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + 'n_lrc_1_angles.npy', np_dir + 'n_lrc_1_images.npy')
+  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + 'n_lrc_1_angles.npy', np_dir + 'n_lrc_1_images.npy', 0)
+  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_2_images.npy', np_dir + 'n_lrc_2_angles.npy', np_dir + 'n_lrc_2_images.npy', 2000)
+  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_3_images.npy', np_dir + 'n_lrc_3_angles.npy', np_dir + 'n_lrc_3_images.npy', 4000)
+  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_4_images.npy', np_dir + 'n_lrc_4_angles.npy', np_dir + 'n_lrc_4_images.npy', 7000)
+  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_5_images.npy', np_dir + 'n_lrc_5_angles.npy', np_dir + 'n_lrc_5_images.npy', 15000)
   # show_npfile_images(np_dir + 'n_lrc_3_images.npy', np_dir + 'n_lrc_5_images.npy')
-  
+  # plot_labels(np_dir + 'n_lrc_1_angles.npy')
+  # plot_labels(np_dir + 'n_lrc_2_angles.npy')
+  # plot_labels(np_dir + 'n_lrc_3_angles.npy')
+  # plot_labels(np_dir + 'n_lrc_4_angles.npy')
+  # plot_labels(np_dir + 'n_lrc_5_angles.npy')
+
+
+
   #combine images and show, 
   # combine_images(np_dir + 'n_lrc_1_images.npy', np_dir + 'n_lrc_2_images.npy', np_dir + 'lrc_combo_images.npy')
   # combine_images(np_dir + 'lrc_combo_images.npy', np_dir + 'n_lrc_3_images.npy', np_dir + 'lrc_combo_images.npy')
