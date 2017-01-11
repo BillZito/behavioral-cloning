@@ -93,7 +93,7 @@ if __name__ == "__main__":
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'lrc_combo_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'lrc_combo_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_20', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_22', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)

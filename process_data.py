@@ -16,7 +16,7 @@ Combine labels and same them .npy file.
 '''
 
 '''
-save all images to file
+save all images (not just center) to file
 '''
 def save_images(img_dir, dest_file):
   img_list = os.listdir(img_dir)
@@ -24,6 +24,7 @@ def save_images(img_dir, dest_file):
 
   count = 0
   for img_name in img_list:
+    # can change this line to img_name.startswith('center') for center imgs
     if not img_name.startswith('.'):
       if count % 500 == 0:
         print('count is', count)
@@ -35,8 +36,8 @@ def save_images(img_dir, dest_file):
   #cast to numpy array and save to file
   all_images = np.array(img_combo)
   print('images shape', all_images.shape)
-  #udacity_center_images.npy
   np.save(dest_file, all_images)
+
 
 '''
 save csv contents to a file
@@ -47,16 +48,13 @@ def save_csv(dest_file):
   # split the first value based on value right after center
   all_angles = []
   for row in reader: 
-    # title = row[0].split('center_')[1]
-    # print('newval', title)
     steering_angle = row[3]
     all_angles.append(steering_angle)
 
   np_angles = np.array(all_angles)
   print('angles shape', np_angles.shape)
-  # udacity_angles.npy
-
   np.save(dest_file, np_angles)
+
 
 '''
 save csv with left and right
@@ -67,22 +65,22 @@ def save_csv_lrc(csv_dir, dest_file):
   # split the first value based on value right after center
   all_angles = []
   for row in reader: 
-    # title = row[0].split('center_')[1]
-    # print('newval', title)
     steering_angle = float(row[3])
     all_angles.append(steering_angle)
   print('done with center', len(all_angles))
   
+  #left (based on order of images in logs)
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader:
-    steering_angle = float(row[3]) + .25
+    steering_angle = float(row[3]) - .25
     print('steering angle is', steering_angle)
     all_angles.append(steering_angle)
   print('done with left', len(all_angles))
 
+  #right
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader: 
-    steering_angle = float(row[3]) - .25
+    steering_angle = float(row[3]) + .25
     all_angles.append(steering_angle)
 
   np_angles = np.array(all_angles)
@@ -91,8 +89,9 @@ def save_csv_lrc(csv_dir, dest_file):
 
   np.save(dest_file, np_angles)
 
+
 '''
-combine my images and udacity images from numpy files
+combine two sets of images from numpy files
 '''
 def combine_images(first_src, second_src, dest_file):
   my_images = np.load(first_src)
@@ -104,7 +103,7 @@ def combine_images(first_src, second_src, dest_file):
 
 
 '''
-combine my labels and udacity labels from numpy files (originally from csv files) 
+combine two sets of labels rom numpy files 
 '''
 def combine_labels(first_src, second_src, dest_file):
   my_labels = np.load(first_src)
@@ -113,6 +112,7 @@ def combine_labels(first_src, second_src, dest_file):
   print('angle destination:', dest_file)
   print('combined labels shape', combo_angles.shape)
   np.save(dest_file, combo_angles)
+
 
 '''
 combine left, center, and right images and save to .npy file
@@ -128,22 +128,26 @@ def lr_augment(src_dir, dest_file):
       
       img = concat(img_name, src_dir)
       
+      #for first img, initialize concatted_imgs
       if l_count == 0: 
         concatted_imgs = img.reshape((1,) + img.shape)
       elif l_count % 500 == 1:
+        #save every 500 images and then reset concatted to cur image
         print('l_count', l_count)
         save_concat(concatted_imgs, dest_file)
         concatted_imgs = img.reshape((1,) + img.shape)
       else:
+        #otherwise add another image to concatted
         concatted_imgs = np.append(concatted_imgs, img.reshape((1,) + img.shape), axis=0)
         if l_count % 500 == 2:
-          #remove the first one that is only there as default
+          #remove the first image that is only there to initialize concatted
           concatted_imgs = np.delete(concatted_imgs, 0, 0)
 
       l_count += 1
 
   save_concat(concatted_imgs, dest_file)
   print('saved all imgs')
+
 
 '''
 concats left, center, and right images
@@ -158,6 +162,7 @@ def concat(img_name, src_dir):
 
   img = np.concatenate((left_img, center_img, right_img), axis=1)
   return img
+
 
 '''
 saves passed in images to end of current list of concatted files
@@ -204,6 +209,7 @@ def show_file_images(filename, img_list):
   
   plt.show()
 
+
 '''
 read in 9 random images from numpy file and visualize
 '''
@@ -227,6 +233,7 @@ def show_npfile_images(src_file, second_src):
   
   plt.show()
 
+
 '''
 show images to test that flipping correct
 '''
@@ -245,22 +252,25 @@ def show_images(img_arr):
 
   plt.show()
 
+
+'''
+show a single image
+'''
 def show_image(img):
-  # flt = plt.figure()
   plt.imshow(img)
   plt.show()
+
 
 '''
 plot labels to understand their distribution
 '''
 def plot_labels(src_file):
   labels = np.load(src_file).astype(float)
-  # print('lables start', labels)
   labels = np.multiply(labels, 100)
-  # print('after mult, labels are', labels)
   # print('as int, labels are', labels.astype(int))
   plt.hist(x=labels.astype(int), range=(-100, 100), bins=201)
   plt.show()
+
 
 '''
 ouptut how many of l/r/or center images
@@ -282,6 +292,7 @@ def count_images(img_dir):
       # img_combo.append(img)
   print('counts l, c, r:', l_count, c_count, r_count)
 
+
 '''
 ##########################################################################
 -Process images to crop out unnecessary parts
@@ -293,12 +304,14 @@ def count_images(img_dir):
 remove 3/4 of zero values since zeros are 50x larger than other data points currently
 '''
 def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file, start=0):
+  # load files
   labels = np.load(angles_src)
   images = np.load(images_src)
   print('initial shapes', labels.shape, images.shape)
   normalized_labels = np.array([labels[0]])
   normalized_images = np.array([images[0]])
 
+  # for each value, randomly remove ~3/4 of 0's and save to new array
   index = 0
   deleted_count = 0
   for index in range(start, start + images.shape[0]): 
@@ -310,6 +323,8 @@ def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file, s
     random_num = random.randint(1, 100)
 
     if val != 0 or random_num < 25:
+      #all angles given since array is relatively small, whereas only range of images given to function
+      #thereore, the correct image index is the index - the start value of the range
       normalized_labels = np.append(normalized_labels, np.array([val]), axis=0)
       normalized_images = np.append(normalized_images, np.array([images[index - start]]), axis=0)
       if normalized_labels.shape[0] % 500 == 0:
@@ -319,6 +334,7 @@ def zero_normalize(angles_src, images_src, angles_dest_file, images_dest_file, s
       if deleted_count % 500 == 0:
         print('deleted count now', deleted_count)
 
+  #save the images
   print('0s deleted', deleted_count)
   print('total vals now', normalized_labels.shape, normalized_images.shape)
   normalized_labels = np.delete(normalized_labels, 0, 0)
@@ -343,6 +359,7 @@ def flip_X(images):
   flipped_imgs = np.delete(flipped_imgs, 0, 0)
   return flipped_imgs
 
+
 '''
 flip labels to negative
 '''
@@ -351,6 +368,7 @@ def flip_y(labels):
   for i in range(len(labels)):
     labels[i] = labels[i] * -1
   return labels
+
 
 '''
 for half of images and labels given, flip them, then return
@@ -367,6 +385,7 @@ def flip_half(X, y):
   modified_y = np.concatenate([half_flipped_y, shuffled_y[half:end]])
   # print('modified shapes', modified_X.shape, modified_y.shape)
   return modified_X, modified_y
+
 
 '''
 change the brightness for each img in array
@@ -388,6 +407,7 @@ def change_brightness(img_arr):
   adjusted_imgs = np.delete(adjusted_imgs, 0, 0)
   return adjusted_imgs
 
+
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 '''
@@ -408,6 +428,7 @@ def resize_images(img_arr, width, height, end=2000):
     
   # print('resized_imgs size', resized_imgs.shape)
   return resized_imgs
+
 
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
@@ -437,6 +458,7 @@ def resize_file_images(img_src, dest_file, size, start=0, end=0):
   np.save(dest_file, resized_imgs)
   print('final shape', resized_imgs.shape, 'saved to', dest_file)
 
+
 '''
 for every 2000 images, resize and save
 unfortunately doesnt do the last 100 messages because less than 2000
@@ -458,6 +480,7 @@ def resize_all(src_file, np_dir, dest_name, size):
     resize_file_images(src_file, np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, size, last_start, end)
   print('resized all')
 
+
 '''
 crop images to remove content above horizon and hood of car
 '''
@@ -477,6 +500,7 @@ def crop_images(img_arr, low_bound, top_bound):
   # np.save(dest_file, np_cropped)
   # print('dest file is', dest_file)
   return np_cropped
+
 
 '''
 crop images to remove content above horizon and hood of car (from file)
@@ -509,8 +533,8 @@ if __name__ == '__main__':
   
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
-  # save_csv_lrc(csv_dir, np_dir + 'lrc_angles.npy')
-  # plot_labels(np_dir + 'lrc_angles.npy')
+  # save_csv_lrc(csv_dir, np_dir + '2_lrc_angles.npy')
+  # plot_labels(np_dir + '2_lrc_angles.npy')
 
 
   #crop images, print to make sure fine
@@ -527,32 +551,32 @@ if __name__ == '__main__':
   # show_npfile_images(np_dir + 'c_lrc_4_images.npy', np_dir + 'c_lrc_5_images.npy')
   
   #normalize images and csv and show
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + 'n_lrc_1_angles.npy', np_dir + 'n_lrc_1_images.npy', 0)
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_2_images.npy', np_dir + 'n_lrc_2_angles.npy', np_dir + 'n_lrc_2_images.npy', 2000)
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_3_images.npy', np_dir + 'n_lrc_3_angles.npy', np_dir + 'n_lrc_3_images.npy', 4000)
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_4_images.npy', np_dir + 'n_lrc_4_angles.npy', np_dir + 'n_lrc_4_images.npy', 7000)
-  # zero_normalize(np_dir + 'lrc_angles.npy', np_dir + 'c_lrc_5_images.npy', np_dir + 'n_lrc_5_angles.npy', np_dir + 'n_lrc_5_images.npy', 15000)
-  # show_npfile_images(np_dir + 'n_lrc_3_images.npy', np_dir + 'n_lrc_5_images.npy')
-  # plot_labels(np_dir + 'n_lrc_1_angles.npy')
-  # plot_labels(np_dir + 'n_lrc_2_angles.npy')
-  # plot_labels(np_dir + 'n_lrc_3_angles.npy')
-  # plot_labels(np_dir + 'n_lrc_4_angles.npy')
-  # plot_labels(np_dir + 'n_lrc_5_angles.npy')
+  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_1_images.npy', 0)
+  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_2_images.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_n_lrc_2_images.npy', 2000)
+  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_3_images.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_n_lrc_3_images.npy', 4000)
+  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_4_images.npy', np_dir + '2_n_lrc_4_angles.npy', np_dir + '2_n_lrc_4_images.npy', 7000)
+  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_5_images.npy', np_dir + '2_n_lrc_5_angles.npy', np_dir + '2_n_lrc_5_images.npy', 15000)
+  # show_npfile_images(np_dir + '2_n_lrc_1_images.npy', np_dir + '2_n_lrc_1_images.npy')
+  # plot_labels(np_dir + '2_n_lrc_1_angles.npy')
+  # plot_labels(np_dir + '2_n_lrc_2_angles.npy')
+  # plot_labels(np_dir + '2_n_lrc_3_angles.npy')
+  # plot_labels(np_dir + '2_n_lrc_4_angles.npy')
+  # plot_labels(np_dir + '2_n_lrc_5_angles.npy')
 
 
 
   #combine images and show, 
-  # combine_images(np_dir + 'n_lrc_1_images.npy', np_dir + 'n_lrc_2_images.npy', np_dir + 'lrc_combo_images.npy')
-  # combine_images(np_dir + 'lrc_combo_images.npy', np_dir + 'n_lrc_3_images.npy', np_dir + 'lrc_combo_images.npy')
-  # combine_images(np_dir + 'lrc_combo_images.npy', np_dir + 'n_lrc_4_images.npy', np_dir + 'lrc_combo_images.npy')
-  # combine_images(np_dir + 'lrc_combo_images.npy', np_dir + 'n_lrc_5_images.npy', np_dir + 'lrc_combo_images.npy')
-  # show_npfile_images(np_dir + 'lrc_combo_images.npy', np_dir + 'lrc_combo_images.npy')
+  combine_images(np_dir + '2_n_lrc_1_images.npy', np_dir + '2_n_lrc_2_images.npy', np_dir + '2_lrc_combo_images.npy')
+  combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_3_images.npy', np_dir + '2_lrc_combo_images.npy')
+  combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_4_images.npy', np_dir + '2_lrc_combo_images.npy')
+  combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_5_images.npy', np_dir + '2_lrc_combo_images.npy')
+  show_npfile_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_lrc_combo_images.npy')
   
   #combine labels and show
-  # combine_labels(np_dir + 'n_lrc_1_angles.npy', np_dir + 'n_lrc_2_angles.npy', np_dir + 'lrc_combo_angles.npy')
-  # combine_labels(np_dir + 'lrc_combo_angles.npy', np_dir + 'n_lrc_3_angles.npy', np_dir + 'lrc_combo_angles.npy')
-  # combine_labels(np_dir + 'lrc_combo_angles.npy', np_dir + 'n_lrc_4_angles.npy', np_dir + 'lrc_combo_angles.npy')
-  # combine_labels(np_dir + 'lrc_combo_angles.npy', np_dir + 'n_lrc_5_angles.npy', np_dir + 'lrc_combo_angles.npy')
-  # plot_labels(np_dir + 'lrc_combo_angles.npy')
+  # combine_labels(np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_lrc_combo_angles.npy')
+  # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_lrc_combo_angles.npy')
+  # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_4_angles.npy', np_dir + '2_lrc_combo_angles.npy')
+  # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_5_angles.npy', np_dir + '2_lrc_combo_angles.npy')
+  # plot_labels(np_dir + '2_lrc_combo_angles.npy')
 
   
