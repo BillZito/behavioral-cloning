@@ -596,8 +596,8 @@ if __name__ == '__main__':
 
   ##########################################################################################
   #combine images and show, 
-  # combine_all(np_dir + 'lrc_images.npy', np_dir, 'lrc_r_images.npy', 'lrc_combo_images.npy')
-  # show_npfile_images_angles(np_dir + 'lrc_combo_images.npy', np_dir + 'lrc_angles.npy')
+  # combine_all(np_dir + 'u_lrc_images.npy', np_dir, 'u3_r_lrc_images.npy', 'u3_images.npy')
+  show_npfile_images_angles(np_dir + 'u3_images.npy', np_dir + 'u_lrc_angles.npy')
 
 
   ##########################################################################################

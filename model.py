@@ -25,7 +25,7 @@ create a model to train the img data with
 '''
 def make_model(time_len=1):
   #our data, 3 color channels, 64 by 64
-  row, col, ch = 64, 64, 3
+  row, col, ch = 40, 160, 3
   start_shape = (row, col, ch)
 
   #set up sequential linear model (stacked on top of eachother)
@@ -43,6 +43,9 @@ def make_model(time_len=1):
   model.add(ELU())
   model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode='same'))
 
+  # model.add(ELU())
+  # model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode='same'))
+
   #flatten and dropout .2
   model.add(Flatten())
   model.add(Dropout(.2))
@@ -52,6 +55,10 @@ def make_model(time_len=1):
   model.add(Dense(512))
   model.add(Dropout(.5))
   model.add(ELU())
+
+  # model.add(Dense(512))
+  # model.add(Dropout(.5))
+  # model.add(ELU())
 
   #dense 1 -- outputs to 1 and then can 1-hot it?
   model.add(Dense(1)) 
@@ -110,12 +117,12 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=8, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=7, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'u_lrc_combo_images.npy', help='File where features .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'u3_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'u_lrc_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_46', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_52', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
