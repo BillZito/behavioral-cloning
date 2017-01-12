@@ -18,7 +18,7 @@ from process_data import crop_images, resize_images, show_images, change_brightn
 
 np_dir = 'data/np_data/'
 model_dir = 'models/'
-
+# curr_epoch = 1
 '''
 create a model to train the img data with
 *why need time_len = 1?
@@ -71,6 +71,9 @@ def my_generator(X, y, batch_size, num_per_epoch):
   print('generator starting')
   #preprocess image
 
+  # curr_epoch += 1
+  # print('curr epoch', epoch)
+
   while True:
     # print('range is', int(num_per_epoch/batch_size))
     smaller = min(len(X), num_per_epoch)
@@ -78,10 +81,31 @@ def my_generator(X, y, batch_size, num_per_epoch):
     for i in range(iterations):
       X, y = shuffle(X, y)
       start, end = i * batch_size, (i + 1) * batch_size
+      # make x/y have only a certain amount of 0's by checking y vals
+      zero_prob = 0.25
+      zero_count = 0
+      new_y = y[start].reshape((1,) + y[start].shape)
+      new_X = X[start].reshape((1,) + X[start].shape)
+      # print('y shape x shape', new_y.shape, new_X.shape)
+      count = 1
+      while new_y.shape[0] < batch_size:
+        random_int = random.randint(1, 100)
+        if random_int < 20:
+          next_y = np.array([y[count % y.shape[0]]])
+          next_X = np.array([X[count % X.shape[0]]])
+          # print('next y and x', next_y.shape, next_X.shape)
+          new_y = np.append(new_y, next_y, axis=0)
+          new_X = np.append(new_X, next_X, axis=0)
+        
+        count += 1
+      # print('y after while', new_y.shape[0])
+      # print('x after while', new_X.shape[0])
+
       half_flip_X, half_flip_y = flip_half(X_train[start: end], y_train[start: end])
       brightness_adjusted_imgs = change_brightness(half_flip_X)
       # cropped_imgs = crop_images(brightness_adjusted_imgs, 60, 140)
       # resized_imgs = resize_images(cropped_imgs, 64, 64)
+      # curr_epoch += 1
       yield (brightness_adjusted_imgs, half_flip_y)
 
 
@@ -89,11 +113,11 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
   parser.add_argument('--epoch', type=int, default=10, help='Number of epochs.')
-  parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
+  parser.add_argument('--epochsize', type=int, default=1000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'lrc_combo_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'lrc_combo_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_22', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + '2_lrc_combo_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + '2_lrc_combo_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_24', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)

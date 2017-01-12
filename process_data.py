@@ -73,7 +73,7 @@ def save_csv_lrc(csv_dir, dest_file):
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader:
     steering_angle = float(row[3]) - .25
-    print('steering angle is', steering_angle)
+    # print('steering angle is', steering_angle)
     all_angles.append(steering_angle)
   print('done with left', len(all_angles))
 
@@ -529,17 +529,21 @@ if __name__ == '__main__':
 
   # for each img in norm and correct, save it to .npy
   # save_images(img_dir, np_dir + 'lrc_images.npy')
-  # show_npfile_images(np_dir + 'lrc_images.npy', np_dir + 'lrc_images.npy')
+  show_npfile_images(np_dir + 'u_lrc_images.npy', np_dir + 'u_lrc_images.npy')
   
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
   # save_csv_lrc(csv_dir, np_dir + '2_lrc_angles.npy')
   # plot_labels(np_dir + '2_lrc_angles.npy')
+  # save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
+  # plot_labels(np_dir + 'u_lrc_angles.npy')
 
 
   #crop images, print to make sure fine
   # crop_file_images(np_dir + 'lrc_images.npy', np_dir + 'c_lrc_images.npy', 60, 140)
   # show_npfile_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_images.npy')
+  # crop_file_images(np_dir + 'u_lrc_images.npy', np_dir + 'u_c_lrc_images.npy', 60, 140)
+  # show_npfile_images(np_dir + 'u_c_lrc_images.npy', np_dir + 'u_c_lrc_images.npy')
 
   #resize them, print to make sure fine
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_1_images.npy', 64, 0, 2000)
@@ -547,7 +551,8 @@ if __name__ == '__main__':
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_3_images.npy', 64, 4000, 7000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
-  # resize_all(np_dir + 'c_lrc_images.npy', np_dir, 'test.npy', 64)
+  #__________________________________________________________________________________
+  # resize_all(np_dir + 'u_c_lrc_images.npy', np_dir, 'u_r_lrc_images.npy', 64)
   # show_npfile_images(np_dir + 'c_lrc_4_images.npy', np_dir + 'c_lrc_5_images.npy')
   
   #normalize images and csv and show
@@ -566,11 +571,11 @@ if __name__ == '__main__':
 
 
   #combine images and show, 
-  combine_images(np_dir + '2_n_lrc_1_images.npy', np_dir + '2_n_lrc_2_images.npy', np_dir + '2_lrc_combo_images.npy')
-  combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_3_images.npy', np_dir + '2_lrc_combo_images.npy')
-  combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_4_images.npy', np_dir + '2_lrc_combo_images.npy')
-  combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_5_images.npy', np_dir + '2_lrc_combo_images.npy')
-  show_npfile_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_lrc_combo_images.npy')
+  # combine_images(np_dir + '2_n_lrc_1_images.npy', np_dir + '2_n_lrc_2_images.npy', np_dir + '2_lrc_combo_images.npy')
+  # combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_3_images.npy', np_dir + '2_lrc_combo_images.npy')
+  # combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_4_images.npy', np_dir + '2_lrc_combo_images.npy')
+  # combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_5_images.npy', np_dir + '2_lrc_combo_images.npy')
+  # show_npfile_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_lrc_combo_images.npy')
   
   #combine labels and show
   # combine_labels(np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_lrc_combo_angles.npy')
