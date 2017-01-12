@@ -60,7 +60,7 @@ def telemetry(sid, data):
     if abs(steering_angle) > .1:
         steering_angle = steering_angle * 1
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = .08
+    throttle = .3
     print('new steering angle is', steering_angle)
     send_control(steering_angle, throttle)
 

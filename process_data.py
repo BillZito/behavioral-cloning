@@ -101,6 +101,30 @@ def combine_images(first_src, second_src, dest_file):
   print('combined images shape', combined.shape)
   np.save(dest_file, combined)
 
+'''
+given the length of shape, for each set of images, find correct file and combine
+'''
+def combine_all(src_file, np_dir, img_prefix, dest_name):
+  imgs = np.load(src_file)
+  end = imgs.shape[0]
+  print('end is', end)
+  last_start = 4000
+  start_str = '0_2000_'
+  second_str = '2000_4000_'
+  combine_images(np_dir + start_str + img_prefix, np_dir + second_str + img_prefix, np_dir + dest_name)
+  
+  for i in range(6000, end, 2000):
+    print('combining', np_dir + str(last_start) + '_' + str(i) + '_' + img_prefix, 'range', last_start, i)
+    combine_images(np_dir + str(last_start) + '_' + str(i)  + '_' + img_prefix, np_dir + dest_name, np_dir + dest_name)
+    last_start = i
+
+  #combine last set
+  print('end is ', end, 'last start is', last_start)
+  if (end - last_start != 2000):
+    print('combining', np_dir + str(last_start) + '_' + str(end) + '_' + img_prefix, 'range', last_start, end)
+    combine_images(np_dir + str(last_start) + '_' + str(end)  + '_' + img_prefix, np_dir + dest_name, np_dir + dest_name)
+  print('combined all')
+
 
 '''
 combine two sets of labels rom numpy files 
@@ -521,24 +545,24 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 
 if __name__ == '__main__':
   img_dir = 'data/images/udacity_IMG'
-  csv_dir = 'data/logs/udacity_driving_log.csv'
+  csv_dir = 'data/logs/my_driving_log.csv'
   np_dir = 'data/np_data/'
 
   ##########################################################################################
   # for each img in norm and correct, save it to .npy
   # save_images(img_dir, np_dir + 'u_lrc_images.npy')
-  # show_npfile_images_angles(np_dir + 'udacity_images.npy', np_dir + 'udacity_angles.npy')
+  # show_npfile_images_angles(np_dir + 'lrc_images.npy', np_dir + 'lrc_angles.npy')
 
   ##########################################################################################  
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
-  # save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
-  # plot_labels(np_dir + 'u_lrc_angles.npy')
+  # save_csv_lrc(csv_dir, np_dir + 'lrc_angles.npy')
+  # plot_labels(np_dir + 'lrc_angles.npy')
 
   ##########################################################################################
   #crop images, print to make sure fine
-  # crop_file_images(np_dir + 'udacity_images.npy', np_dir + 'udacity_c_images.npy', 60, 140)
-  # show_npfile_images_angles(np_dir + 'udacity_c_images.npy', np_dir + 'udacity_angles.npy')
+  # crop_file_images(np_dir + 'lrc_images.npy', np_dir + 'lrc_c_images.npy', 60, 140)
+  # show_npfile_images_angles(np_dir + 'lrc_c_images.npy', np_dir + 'lrc_angles.npy')
  
   ##########################################################################################
   #resize them, print to make sure fine
@@ -548,9 +572,11 @@ if __name__ == '__main__':
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   #__________________________________________________________________________________
-  # resize_all(np_dir + 'udacity_c_images.npy', np_dir, 'udacity_r_images.npy', 64)
-  # show_npfile_images_angles(np_dir + '0_2000_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
+  # resize_all(np_dir + 'lrc_c_images.npy', np_dir, 'lrc_r_images.npy', 64)
+  # show_npfile_images_angles(np_dir + '0_2000_lrc_r_images.npy', np_dir + 'lrc_angles.npy')
   # show_npfile_images_angles(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
+
+
 
   ##########################################################################################
   #DONT DO THIS PART____________________________________________________________________________________________
@@ -570,13 +596,12 @@ if __name__ == '__main__':
 
   ##########################################################################################
   #combine images and show, 
-  combine_images(np_dir + '0_2000_udacity_r_images.npy', np_dir + '2000_4000_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy')
-  combine_images(np_dir + '4000_6000_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_r_combo_images.npy')
-  combine_images(np_dir + '6000_8000_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_r_combo_images.npy')
-  combine_images(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_r_combo_images.npy')
-  show_npfile_images_angles(np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_angles.npy')
+  # combine_all(np_dir + 'lrc_images.npy', np_dir, 'lrc_r_images.npy', 'lrc_combo_images.npy')
+  # show_npfile_images_angles(np_dir + 'lrc_combo_images.npy', np_dir + 'lrc_angles.npy')
+
 
   ##########################################################################################
+  #DONT DO THIS PART________________________________________________________________________________
   #combine labels and show
   # combine_labels(np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_lrc_combo_angles.npy')
   # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_lrc_combo_angles.npy')
