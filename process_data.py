@@ -473,8 +473,8 @@ def resize_all(src_file, np_dir, dest_name, size):
   #combine last set
   print('end is ', end, 'last start is', last_start)
   if (end - last_start != 2000):
-    print('resizing to', np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, 'range', last_start, end)
-    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, size, last_start, end)
+    print('resizing to', np_dir + str(last_start) + '_' + str(end) + '_' + dest_name, 'range', last_start, end)
+    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(end) + '_' + dest_name, size, last_start, end)
   print('resized all')
 
 
@@ -524,24 +524,23 @@ if __name__ == '__main__':
   csv_dir = 'data/logs/udacity_driving_log.csv'
   np_dir = 'data/np_data/'
 
+  ##########################################################################################
   # for each img in norm and correct, save it to .npy
   # save_images(img_dir, np_dir + 'u_lrc_images.npy')
-  # show_npfile_images_angles(np_dir + 'u_lrc_images.npy', np_dir + 'u_lrc_angles.npy')
-  
+  # show_npfile_images_angles(np_dir + 'udacity_images.npy', np_dir + 'udacity_angles.npy')
+
+  ##########################################################################################  
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
-  # save_csv_lrc(csv_dir, np_dir + '2_lrc_angles.npy')
-  # plot_labels(np_dir + '2_lrc_angles.npy')
-  save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
-  plot_labels(np_dir + 'u_lrc_angles.npy')
+  # save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
+  # plot_labels(np_dir + 'u_lrc_angles.npy')
 
-
+  ##########################################################################################
   #crop images, print to make sure fine
-  # crop_file_images(np_dir + 'lrc_images.npy', np_dir + 'c_lrc_images.npy', 60, 140)
-  # show_npfile_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_images.npy')
-  # crop_file_images(np_dir + 'u_lrc_images.npy', np_dir + 'u_c_lrc_images.npy', 60, 140)
-  # show_npfile_images(np_dir + 'u_c_lrc_images.npy', np_dir + 'u_c_lrc_images.npy')
-
+  # crop_file_images(np_dir + 'udacity_images.npy', np_dir + 'udacity_c_images.npy', 60, 140)
+  # show_npfile_images_angles(np_dir + 'udacity_c_images.npy', np_dir + 'udacity_angles.npy')
+ 
+  ##########################################################################################
   #resize them, print to make sure fine
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_1_images.npy', 64, 0, 2000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_2_images.npy', 64, 2000, 4000)
@@ -549,9 +548,12 @@ if __name__ == '__main__':
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   #__________________________________________________________________________________
-  # resize_all(np_dir + 'u_c_lrc_images.npy', np_dir, 'u_r_lrc_images.npy', 64)
-  # show_npfile_images_angles(np_dir + '0_2000_u_r_lrc_images.npy', np_dir + 'u_lrc_angles.npy')
-  
+  # resize_all(np_dir + 'udacity_c_images.npy', np_dir, 'udacity_r_images.npy', 64)
+  # show_npfile_images_angles(np_dir + '0_2000_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
+  # show_npfile_images_angles(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
+
+  ##########################################################################################
+  #DONT DO THIS PART____________________________________________________________________________________________
   #normalize images and csv and show
   # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_1_images.npy', 0)
   # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_2_images.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_n_lrc_2_images.npy', 2000)
@@ -566,30 +568,15 @@ if __name__ == '__main__':
   # plot_labels(np_dir + '2_n_lrc_5_angles.npy')
 
 
-
+  ##########################################################################################
   #combine images and show, 
-  # combine_images(np_dir + 'c_lrc_1_images.npy', np_dir + 'c_lrc_2_images.npy', np_dir + '2_lrc_nonorm_images.npy')
-  # combine_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + 'c_lrc_3_images.npy', np_dir + '2_lrc_nonorm_images.npy')
-  # combine_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + 'c_lrc_4_images.npy', np_dir + '2_lrc_nonorm_images.npy')
-  # combine_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + 'c_lrc_5_images.npy', np_dir + '2_lrc_nonorm_images.npy')
-  # show_npfile_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + '2_lrc_nonorm_images.npy', np_dir + '2_lrc_combo_angles.npy')
-  # combine_images(np_dir + '0_2000_u_r_lrc_images.npy', np_dir + '2000_4000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '4000_6000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '6000_8000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '8000_10000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '10000_12000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '12000_14000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '14000_16000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '16000_18000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '18000_20000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '20000_22000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '22000_24000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
-  # combine_images(np_dir + '24000_24108_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  combine_images(np_dir + '0_2000_udacity_r_images.npy', np_dir + '2000_4000_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy')
+  combine_images(np_dir + '4000_6000_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_r_combo_images.npy')
+  combine_images(np_dir + '6000_8000_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_r_combo_images.npy')
+  combine_images(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_r_combo_images.npy')
+  show_npfile_images_angles(np_dir + 'udacity_r_combo_images.npy', np_dir + 'udacity_angles.npy')
 
-  # show_npfile_images_angles(np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_angles.npy')
-
-
-
+  ##########################################################################################
   #combine labels and show
   # combine_labels(np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_lrc_combo_angles.npy')
   # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_lrc_combo_angles.npy')
