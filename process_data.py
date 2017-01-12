@@ -72,7 +72,7 @@ def save_csv_lrc(csv_dir, dest_file):
   #left (based on order of images in logs)
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader:
-    steering_angle = float(row[3]) - .25
+    steering_angle = float(row[3]) + .25
     # print('steering angle is', steering_angle)
     all_angles.append(steering_angle)
   print('done with left', len(all_angles))
@@ -80,7 +80,7 @@ def save_csv_lrc(csv_dir, dest_file):
   #right
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader: 
-    steering_angle = float(row[3]) + .25
+    steering_angle = float(row[3]) - .25
     all_angles.append(steering_angle)
 
   np_angles = np.array(all_angles)
@@ -532,7 +532,7 @@ if __name__ == '__main__':
   # for all right, save as +.25
   # save_csv_lrc(csv_dir, np_dir + '2_lrc_angles.npy')
   # plot_labels(np_dir + '2_lrc_angles.npy')
-  # save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
+  save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
   plot_labels(np_dir + 'u_lrc_angles.npy')
 
 

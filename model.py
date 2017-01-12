@@ -25,7 +25,7 @@ create a model to train the img data with
 '''
 def make_model(time_len=1):
   #our data, 3 color channels, 64 by 64
-  row, col, ch = 64, 64, 3
+  row, col, ch = 160, 320, 3
   start_shape = (row, col, ch)
 
   #set up sequential linear model (stacked on top of eachother)
@@ -35,13 +35,22 @@ def make_model(time_len=1):
   model.add(Lambda(lambda x: x / 255.5 - .5, input_shape=(start_shape), output_shape=(start_shape)))
 
   #convolutional 16, 8, 8 with subsample aka stridelength (4, 4), same padding means that it doesn't lose part on end? 
-  model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode='same'))
-
+  model.add(Convolution2D(24, 31, 8, subsample=(4, 4), border_mode='same'))
   #ELU aka exponential linear unit(similar to RELU)
   model.add(ELU())
-  model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode='same'))
+  
+  model.add(Convolution2D(36, 14, 47, subsample=(2, 2), border_mode='same'))
   model.add(ELU())
-  model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode='same'))
+
+  model.add(Convolution2D(48, 5, 22, subsample=(2, 2), border_mode='same'))
+  model.add(ELU())
+
+  model.add(Convolution2D(64, 3, 20, subsample=(2, 2), border_mode='same'))
+  model.add(ELU())
+
+  model.add(Convolution2D(64, 1, 18, subsample=(2, 2), border_mode='same'))
+  model.add(ELU())
+
 
   #flatten and dropout .2
   model.add(Flatten())
@@ -51,6 +60,9 @@ def make_model(time_len=1):
   # dense (aka normal fully connected) -- outputs to size 512 (and doesnt matter input)
   model.add(Dense(512))
   model.add(Dropout(.5))
+  model.add(ELU())
+
+  model.add(Dense(256))
   model.add(ELU())
 
   #dense 1 -- outputs to 1 and then can 1-hot it?
@@ -90,7 +102,8 @@ def my_generator(X, y, batch_size, num_per_epoch, epoch):
       count = 1
       while new_y.shape[0] < batch_size:
         random_int = random.randint(1, 100)
-        if random_int < 28 + 8 * epoch:
+        if random_int < 101:
+          # 28 + 8 * epoch
           next_y = np.array([y[count % y.shape[0]]])
           next_X = np.array([X[count % X.shape[0]]])
           # print('next y and x', next_y.shape, next_X.shape)
@@ -101,7 +114,7 @@ def my_generator(X, y, batch_size, num_per_epoch, epoch):
       # print('y after while', new_y.shape[0])
       # print('x after while', new_X.shape[0])
 
-      half_flip_X, half_flip_y = flip_half(X_train[start: end], y_train[start: end])
+      half_flip_X, half_flip_y = flip_half(new_X, new_y)
       brightness_adjusted_imgs = change_brightness(half_flip_X)
       # cropped_imgs = crop_images(brightness_adjusted_imgs, 60, 140)
       # resized_imgs = resize_images(cropped_imgs, 64, 64)
@@ -112,12 +125,12 @@ def my_generator(X, y, batch_size, num_per_epoch, epoch):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=10, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=4, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'u_lrc_combo_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'u_lrc_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_24', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'udacity_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_30', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -138,13 +151,13 @@ if __name__ == "__main__":
   fit model to generated data
   '''
   model = make_model()
-  for i in range(10):
+  for i in range(args.epoch):
 
     model.fit_generator(
       my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, epoch=i),
       nb_epoch=1, 
       samples_per_epoch=args.epochsize,
-      validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize, epoch=15),
+      validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize, epoch=10),
       nb_val_samples=800)
 
   #save the model
