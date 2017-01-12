@@ -32,7 +32,7 @@ def make_model(time_len=1):
   model = Sequential()
 
   #normalize pixels from 255 to be out of 1
-  model.add(Lambda(lambda x: x / 127.5 - 1, input_shape=(start_shape), output_shape=(start_shape)))
+  model.add(Lambda(lambda x: x / 255.5 - .5, input_shape=(start_shape), output_shape=(start_shape)))
 
   #convolutional 16, 8, 8 with subsample aka stridelength (4, 4), same padding means that it doesn't lose part on end? 
   model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode='same'))
@@ -66,9 +66,9 @@ def make_model(time_len=1):
 '''
 create generator to create augmented images
 '''
-def my_generator(X, y, batch_size, num_per_epoch):
+def my_generator(X, y, batch_size, num_per_epoch, epoch):
 
-  print('generator starting')
+  print('epoch ', epoch)
   #preprocess image
 
   # curr_epoch += 1
@@ -90,7 +90,7 @@ def my_generator(X, y, batch_size, num_per_epoch):
       count = 1
       while new_y.shape[0] < batch_size:
         random_int = random.randint(1, 100)
-        if random_int < 20:
+        if random_int < 28 + 8 * epoch:
           next_y = np.array([y[count % y.shape[0]]])
           next_X = np.array([X[count % X.shape[0]]])
           # print('next y and x', next_y.shape, next_X.shape)
@@ -113,10 +113,10 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
   parser.add_argument('--epoch', type=int, default=10, help='Number of epochs.')
-  parser.add_argument('--epochsize', type=int, default=1000, help='How many images per epoch.')
+  parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + '2_lrc_combo_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + '2_lrc_combo_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'u_lrc_combo_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'u_lrc_angles.npy', help='File where labels .npy found.')
   parser.add_argument('--destfile', type=str, default=model_dir + 'generator_24', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
@@ -138,12 +138,14 @@ if __name__ == "__main__":
   fit model to generated data
   '''
   model = make_model()
-  model.fit_generator(
-    my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
-    nb_epoch=args.epoch, 
-    samples_per_epoch=args.epochsize,
-    validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
-    nb_val_samples=800)
+  for i in range(10):
+
+    model.fit_generator(
+      my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, epoch=i),
+      nb_epoch=1, 
+      samples_per_epoch=args.epochsize,
+      validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize, epoch=15),
+      nb_val_samples=800)
 
   #save the model
   print('saving model as', args.destfile)

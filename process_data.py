@@ -213,23 +213,20 @@ def show_file_images(filename, img_list):
 '''
 read in 9 random images from numpy file and visualize
 '''
-def show_npfile_images(src_file, second_src):
+def show_npfile_images_angles(src_file, labels_src):
   fig = plt.figure()
   img_arr = np.load(src_file)
-  flipped_arr = np.load(second_src)
-  print('imgarr size', img_arr.shape, flipped_arr.shape)
+  labels = np.load(labels_src)
+  print('imgarr size', img_arr.shape, labels.shape)
   #for 9 random images, print them 
-  for img_num in range(1, 5):
+  for img_num in range(1, 10):
     random_num = random.randint(0, img_arr.shape[0] - 1)
-    print('img num', img_num, 'image is at', random_num )
+    label = labels[random_num]
+    print('img num', img_num, 'image is at', random_num, 'w/ label ', label)
 
     img = img_arr[random_num]
-    fig.add_subplot(3, 3, img_num * 2 - 1)
+    fig.add_subplot(3, 3, img_num)
     plt.imshow(img)
-
-    flipped_img = flipped_arr[random_num]
-    fig.add_subplot(3, 3, img_num * 2)
-    plt.imshow(flipped_img)
   
   plt.show()
 
@@ -443,7 +440,7 @@ def resize_file_images(img_src, dest_file, size, start=0, end=0):
     end = img_arr.shape[0]
 
   for i in range(start, end):
-    if i % 100 == 0:
+    if i % 500 == 0:
       print('index is', i)
 
     img = img_arr[i]
@@ -523,20 +520,20 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 
 
 if __name__ == '__main__':
-  img_dir = 'data/images/my_IMG'
-  csv_dir = 'data/logs/my_driving_log.csv'
+  img_dir = 'data/images/udacity_IMG'
+  csv_dir = 'data/logs/udacity_driving_log.csv'
   np_dir = 'data/np_data/'
 
   # for each img in norm and correct, save it to .npy
-  # save_images(img_dir, np_dir + 'lrc_images.npy')
-  show_npfile_images(np_dir + 'u_lrc_images.npy', np_dir + 'u_lrc_images.npy')
+  # save_images(img_dir, np_dir + 'u_lrc_images.npy')
+  # show_npfile_images_angles(np_dir + 'u_lrc_images.npy', np_dir + 'u_lrc_angles.npy')
   
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
   # save_csv_lrc(csv_dir, np_dir + '2_lrc_angles.npy')
   # plot_labels(np_dir + '2_lrc_angles.npy')
   # save_csv_lrc(csv_dir, np_dir + 'u_lrc_angles.npy')
-  # plot_labels(np_dir + 'u_lrc_angles.npy')
+  plot_labels(np_dir + 'u_lrc_angles.npy')
 
 
   #crop images, print to make sure fine
@@ -553,7 +550,7 @@ if __name__ == '__main__':
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   #__________________________________________________________________________________
   # resize_all(np_dir + 'u_c_lrc_images.npy', np_dir, 'u_r_lrc_images.npy', 64)
-  # show_npfile_images(np_dir + 'c_lrc_4_images.npy', np_dir + 'c_lrc_5_images.npy')
+  # show_npfile_images_angles(np_dir + '0_2000_u_r_lrc_images.npy', np_dir + 'u_lrc_angles.npy')
   
   #normalize images and csv and show
   # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_1_images.npy', 0)
@@ -571,12 +568,28 @@ if __name__ == '__main__':
 
 
   #combine images and show, 
-  # combine_images(np_dir + '2_n_lrc_1_images.npy', np_dir + '2_n_lrc_2_images.npy', np_dir + '2_lrc_combo_images.npy')
-  # combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_3_images.npy', np_dir + '2_lrc_combo_images.npy')
-  # combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_4_images.npy', np_dir + '2_lrc_combo_images.npy')
-  # combine_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_n_lrc_5_images.npy', np_dir + '2_lrc_combo_images.npy')
-  # show_npfile_images(np_dir + '2_lrc_combo_images.npy', np_dir + '2_lrc_combo_images.npy')
-  
+  # combine_images(np_dir + 'c_lrc_1_images.npy', np_dir + 'c_lrc_2_images.npy', np_dir + '2_lrc_nonorm_images.npy')
+  # combine_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + 'c_lrc_3_images.npy', np_dir + '2_lrc_nonorm_images.npy')
+  # combine_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + 'c_lrc_4_images.npy', np_dir + '2_lrc_nonorm_images.npy')
+  # combine_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + 'c_lrc_5_images.npy', np_dir + '2_lrc_nonorm_images.npy')
+  # show_npfile_images(np_dir + '2_lrc_nonorm_images.npy', np_dir + '2_lrc_nonorm_images.npy', np_dir + '2_lrc_combo_angles.npy')
+  # combine_images(np_dir + '0_2000_u_r_lrc_images.npy', np_dir + '2000_4000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '4000_6000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '6000_8000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '8000_10000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '10000_12000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '12000_14000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '14000_16000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '16000_18000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '18000_20000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '20000_22000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '22000_24000_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+  # combine_images(np_dir + '24000_24108_u_r_lrc_images.npy', np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_combo_images.npy')
+
+  # show_npfile_images_angles(np_dir + 'u_lrc_combo_images.npy', np_dir + 'u_lrc_angles.npy')
+
+
+
   #combine labels and show
   # combine_labels(np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_lrc_combo_angles.npy')
   # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_lrc_combo_angles.npy')
