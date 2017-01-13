@@ -543,10 +543,46 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
   print('dest file is', dest_file)
 
 
+'''
+given an image, provide a small translation and a small change of angle
+'''
+def translate(X, y):
+  #intialize new image set 
+  translated_images = np.array([X[0]])
+  #and new angle set
+  translated_labels = np.array([])
+  # for each image
+  for img_num in range(X.shape[0]):
+    # get a random number between 0 and 1/5 of width of image
+    random_num = random.randint(0, 10)
+    # change image by random num
+    old_img = X[img_num]
+    rows,cols = old_img.shape
+    show_image(old_img)
+    new_shape = np.float32([[1, 0, random_num], [0, 1, 0]])
+    t_image = cv2.warpAffine(old_img, new_shape, (cols, rows))
+    show_image(t_image)
+    # append image to new image set
+    # change angle by random num * .002
+    # append new angles
+  # return new image set and new angle set
+
+  
+# def translate_image(image, amount):
+  # for a given image, provide translation based on given val
+  # return translated_images
+
+# def translate_angle(angle, )
+
+
 if __name__ == '__main__':
   img_dir = 'data/images/udacity_IMG'
   csv_dir = 'data/logs/my_driving_log.csv'
   np_dir = 'data/np_data/'
+
+  #test translation
+  imgs = np.load(np_dir + 'u_lrc_images.npy')
+  translate(imgs, 1)
 
   ##########################################################################################
   # for each img in norm and correct, save it to .npy
@@ -597,7 +633,7 @@ if __name__ == '__main__':
   ##########################################################################################
   #combine images and show, 
   # combine_all(np_dir + 'u_lrc_images.npy', np_dir, 'u3_r_lrc_images.npy', 'u3_images.npy')
-  show_npfile_images_angles(np_dir + 'u3_images.npy', np_dir + 'u_lrc_angles.npy')
+  # show_npfile_images_angles(np_dir + 'u3_images.npy', np_dir + 'u_lrc_angles.npy')
 
 
   ##########################################################################################
