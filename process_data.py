@@ -547,28 +547,39 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 given an image, provide a small translation and a small change of angle
 '''
 def translate(X, y):
+  print('starting shape', X.shape, y.shape)
   #intialize new image set 
   translated_images = np.array([X[0]])
   #and new angle set
-  translated_labels = np.array([])
+  translated_labels = []
   # for each image
   for img_num in range(X.shape[0]):
     # get a random number between 0 and 1/5 of width of image
-    random_num = random.randint(0, 10)
+    random_num = random.randint(-10, 10)
     # change image by random num
-    old_img = X[img_num]
-    rows,cols = old_img.shape
-    show_image(old_img)
-    new_shape = np.float32([[1, 0, random_num], [0, 1, 0]])
-    t_image = cv2.warpAffine(old_img, new_shape, (cols, rows))
-    show_image(t_image)
+    t_image = translate_image(X[img_num], random_num)
     # append image to new image set
+    translated_images = np.append(translated_images, t_image.reshape((1,) + t_image.shape), axis=0)
     # change angle by random num * .002
+    translation = random_num * .002
+    new_val = y[img_num] + translation
     # append new angles
+    translated_labels.append(new_val)
+
+  translated_images = np.delete(translated_images, 0, 0)
+  translated_labels = np.array(translated_labels)
   # return new image set and new angle set
+  print('ending shape', translated_images.shape, translated_labels.shape)
+  return translated_images, translated_labels
 
   
-# def translate_image(image, amount):
+def translate_image(old_img, amount):
+  # print('shape is', old_img.shape)
+  rows,cols, depth = old_img.shape
+  new_shape = np.float32([[1, 0, amount], [0, 1, 0]])
+  t_image = cv2.warpAffine(old_img, new_shape, (cols, rows))
+  # show_image(t_image)
+  return t_image
   # for a given image, provide translation based on given val
   # return translated_images
 
@@ -581,9 +592,10 @@ if __name__ == '__main__':
   np_dir = 'data/np_data/'
 
   #test translation
-  imgs = np.load(np_dir + 'u_lrc_images.npy')
-  translate(imgs, 1)
-
+  # imgs = np.load(np_dir + 'u_lrc_combo_images.npy')
+  # angles = np.load(np_dir + 'u_lrc_angles.npy')
+  # t_imgs, t_angle = translate(imgs[0:100], angles[0:100])
+  # show_images(t_imgs)
   ##########################################################################################
   # for each img in norm and correct, save it to .npy
   # save_images(img_dir, np_dir + 'u_lrc_images.npy')
