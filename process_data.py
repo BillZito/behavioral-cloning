@@ -547,7 +547,7 @@ def crop_file_images(img_src, dest_file, low_bound, top_bound):
 given an image, provide a small translation and a small change of angle
 '''
 def translate(X, y):
-  print('starting shape', X.shape, y.shape)
+  # print('starting shape', X.shape, y.shape)
   #intialize new image set 
   translated_images = np.array([X[0]])
   #and new angle set
@@ -569,7 +569,7 @@ def translate(X, y):
   translated_images = np.delete(translated_images, 0, 0)
   translated_labels = np.array(translated_labels)
   # return new image set and new angle set
-  print('ending shape', translated_images.shape, translated_labels.shape)
+  # print('ending shape', translated_images.shape, translated_labels.shape)
   return translated_images, translated_labels
 
   
@@ -587,30 +587,33 @@ def translate_image(old_img, amount):
 
 
 if __name__ == '__main__':
-  img_dir = 'data/images/udacity_IMG'
-  csv_dir = 'data/logs/my_driving_log.csv'
+  img_dir = 'data/images/IMG'
+  csv_dir = 'data/images/driving_log.csv'
   np_dir = 'data/np_data/'
 
   #test translation
   # imgs = np.load(np_dir + 'u_lrc_combo_images.npy')
   # angles = np.load(np_dir + 'u_lrc_angles.npy')
-  # t_imgs, t_angle = translate(imgs[0:100], angles[0:100])
-  # show_images(t_imgs)
+  # first 100 images of combo show the car apparently...
+  # t_imgs, t_angles = translate(imgs[24100:24150], angles[600:700])
+  # np.save(np_dir + 'test_angles.npy', t_angles)
+  # np.save(np_dir + 'test_images.npy', t_imgs)
+  # show_npfile_images_angles(np_dir + 'test_images.npy', np_dir + 'test_angles.npy')
   ##########################################################################################
   # for each img in norm and correct, save it to .npy
-  # save_images(img_dir, np_dir + 'u_lrc_images.npy')
-  # show_npfile_images_angles(np_dir + 'lrc_images.npy', np_dir + 'lrc_angles.npy')
-
+  # save_images(img_dir, np_dir + '4laps_images.npy')
   ##########################################################################################  
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
-  # save_csv_lrc(csv_dir, np_dir + 'lrc_angles.npy')
-  # plot_labels(np_dir + 'lrc_angles.npy')
+  # save_csv_lrc(csv_dir, np_dir + '4laps_angles.npy')
+  # show_npfile_images_angles(np_dir + '4laps_images.npy', np_dir + 'lrc_angles.npy')
+  # plot_labels(np_dir + '4laps_angles.npy')
+
 
   ##########################################################################################
   #crop images, print to make sure fine
-  # crop_file_images(np_dir + 'lrc_images.npy', np_dir + 'lrc_c_images.npy', 60, 140)
-  # show_npfile_images_angles(np_dir + 'lrc_c_images.npy', np_dir + 'lrc_angles.npy')
+  # crop_file_images(np_dir + '4laps_images.npy', np_dir + '4laps_c_images.npy', 30, 140)
+  # show_npfile_images_angles(np_dir + '4laps_c_images.npy', np_dir + '4laps_angles.npy')
  
   ##########################################################################################
   #resize them, print to make sure fine
@@ -620,8 +623,8 @@ if __name__ == '__main__':
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   #__________________________________________________________________________________
-  # resize_all(np_dir + 'lrc_c_images.npy', np_dir, 'lrc_r_images.npy', 64)
-  # show_npfile_images_angles(np_dir + '0_2000_lrc_r_images.npy', np_dir + 'lrc_angles.npy')
+  # resize_all(np_dir + '4laps_c_images.npy', np_dir, '4laps_r_images.npy', 64)
+  # show_npfile_images_angles(np_dir + '0_2000_4laps_r_images.npy', np_dir + '4laps_angles.npy')
   # show_npfile_images_angles(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
 
 
@@ -644,8 +647,8 @@ if __name__ == '__main__':
 
   ##########################################################################################
   #combine images and show, 
-  # combine_all(np_dir + 'u_lrc_images.npy', np_dir, 'u3_r_lrc_images.npy', 'u3_images.npy')
-  # show_npfile_images_angles(np_dir + 'u3_images.npy', np_dir + 'u_lrc_angles.npy')
+  combine_all(np_dir + '4laps_images.npy', np_dir, '4laps_r_images.npy', '4laps_final_images.npy')
+  show_npfile_images_angles(np_dir + '4laps_final_images.npy', np_dir + '4laps_angles.npy')
 
 
   ##########################################################################################

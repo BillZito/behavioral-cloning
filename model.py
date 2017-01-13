@@ -12,9 +12,11 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from keras.optimizers import Adam
 from keras.models import Sequential
-from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda
+from keras.callbacks import EarlyStopping
+from keras.layers.normalization import BatchNormalization
+from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda, Activation
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-from process_data import crop_images, resize_images, show_images, change_brightness, flip_half, flip_X, flip_y
+from process_data import crop_images, resize_images, show_images, change_brightness, flip_half, flip_X, flip_y, translate
 
 np_dir = 'data/np_data/'
 model_dir = 'models/'
@@ -65,10 +67,79 @@ def make_model(time_len=1):
 
   #compile model and return. setting loss to mean standard error because regression
   #no metrics
+  # model.summary()
+
   adam = Adam(lr=0.0001)
   model.compile(optimizer=adam, loss='mse')
 
   return model
+
+def navidia():
+    nb_filters1 = 12
+    nb_filters2 = 18
+    nb_filters3 = 24
+    nb_filters4 = 36
+
+    pool_size = (2, 2)
+
+    stride1 = [1,1]
+    stride2= [2,2]
+
+    kernel_size = (3, 3)
+    kernel_size1 = (3, 3)
+
+    model = Sequential()
+
+    model.add(BatchNormalization(input_shape=(40, 160, 3)))
+
+    model.add(Convolution2D(nb_filters1, 3, 3, subsample=(1, 1), border_mode="same"))
+    model.add(Activation('relu'))
+    # model.add(Dropout(0.5))
+
+    model.add(Convolution2D(nb_filters2, 3, 3, subsample=(2, 2), border_mode="same"))
+    model.add(Activation('relu'))
+    # model.add(Dropout(0.5))
+
+    model.add(Convolution2D(nb_filters3, 3, 3, subsample=(2, 2), border_mode="same"))
+    model.add(Activation('relu'))
+    # model.add(Dropout(0.5))
+
+    model.add(Convolution2D(nb_filters4, 3, 3, subsample=(2, 2), border_mode="same"))
+    model.add(Activation('relu'))
+
+    model.add(Dropout(0.5))
+
+    model.add(Flatten())
+
+    model.add(Dense(500))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(100))
+    model.add(Activation('relu'))
+
+    model.add(Dense(50))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(1))
+    # model.summary()
+    
+    adam = Adam(lr=0.0001)
+    model.compile(optimizer=adam, loss='mse')
+    return model
+
+'''
+add in validation generator
+'''
+def val_generator(X, y, batch_size, num_per_epoch):
+  while True:
+    X, y = shuffle(X, y)
+    smaller = min(len(X), num_per_epoch)
+    iterations = int(smaller/batch_size)
+    for i in range(iterations):
+      start, end = i * batch_size, (i + 1) * batch_size
+      yield X[start:end], y[start:end]
 
 '''
 create generator to create augmented images
@@ -106,6 +177,7 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # print('x after while', new_X.shape[0])
 
       half_flip_X, half_flip_y = flip_half(new_X, new_y)
+      # translated_X, translated_y = translate(half_flip_X, half_flip_y)
       # half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
       # brightness_adjusted_imgs = change_brightness(half_flip_X)
       # cropped_imgs = crop_images(brightness_adjusted_imgs, 60, 140)
@@ -114,16 +186,17 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # yield (brightness_adjusted_imgs, half_flip_y)
       yield(half_flip_X, half_flip_y)
       # yield(new_X, new_y)
+      # yield(translated_X, translated_y)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=8, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=12, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'u_lrc_combo_images.npy', help='File where features .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'u3_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'u_lrc_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_57', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_647', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -140,10 +213,11 @@ if __name__ == "__main__":
   y_val = y_val.astype(np.float)
   print('X_train and y_train', X_train.shape, y_train.shape)
 
+  earlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=1, mode='auto')
   '''
   fit model to generated data
   '''
-  model = make_model()
+  model = navidia()
   for i in range(args.epoch):
     print('epoch ', i)
     norm_threshold = 100 * 1.0/(2 + i)
@@ -151,8 +225,9 @@ if __name__ == "__main__":
       my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=norm_threshold),
       nb_epoch=1, 
       samples_per_epoch=args.epochsize,
-      validation_data=my_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=0),
-      nb_val_samples=800)
+      validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
+      nb_val_samples=800,
+      callbacks=[earlyStop])
 
   #save the model
   print('images', args.features, 'labels', args.labels)
