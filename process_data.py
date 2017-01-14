@@ -103,11 +103,21 @@ def save_csv_lrc(csv_dir, dest_file):
 
   np.save(dest_file, np_angles)
 
+'''
+combine two files
+'''
+def combine_images(first_src, second_src, dest_file):
+  first_imgs = np.load(first_src)
+  second_imgs = np.load(second_src) 
+  combined = np.append(first_imgs, second_imgs, axis=0)
+  print('img destination:', dest_file)
+  print('combined images shape', combined.shape)
+  np.save(dest_file, combined)
 
 '''
 combine two sets of images from numpy files
 '''
-def combine_images(first_src, second_src, dest_file):
+def combine_lrc_images(first_src, second_src, dest_file):
   first_imgs = np.load(first_src)
   length_of_first = first_imgs.shape[0]
   third_length_of_first = int(length_of_first / 3)
@@ -127,25 +137,23 @@ def combine_images(first_src, second_src, dest_file):
 '''
 given the length of shape, for each set of images, find correct file and combine
 '''
-def combine_all(src_file, np_dir, img_prefix, dest_name):
-  imgs = np.load(src_file)
-  end = imgs.shape[0]
-  print('end is', end)
+def combine_all(np_dir, img_prefix, dest_name, length):
+  print('length is', length)
   last_start = 4000
   start_str = '0_2000_'
   second_str = '2000_4000_'
   combine_images(np_dir + start_str + img_prefix, np_dir + second_str + img_prefix, np_dir + dest_name)
   
-  for i in range(6000, end, 2000):
+  for i in range(6000, length, 2000):
     print('combining', np_dir + str(last_start) + '_' + str(i) + '_' + img_prefix, 'range', last_start, i)
-    combine_images(np_dir + str(last_start) + '_' + str(i)  + '_' + img_prefix, np_dir + dest_name, np_dir + dest_name)
+    combine_images(np_dir + dest_name, np_dir + str(last_start) + '_' + str(i)  + '_' + img_prefix, np_dir + dest_name)
     last_start = i
 
   #combine last set
-  print('end is ', end, 'last start is', last_start)
-  if (end - last_start != 2000):
-    print('combining', np_dir + str(last_start) + '_' + str(end) + '_' + img_prefix, 'range', last_start, end)
-    combine_images(np_dir + str(last_start) + '_' + str(end)  + '_' + img_prefix, np_dir + dest_name, np_dir + dest_name)
+  print('length is ', length, 'last start is', last_start)
+  if (length - last_start != 2000):
+    print('combining', np_dir + str(last_start) + '_' + str(length) + '_' + img_prefix, 'range', last_start, length)
+    combine_images(np_dir + dest_name, np_dir + str(last_start) + '_' + str(length)  + '_' + img_prefix, np_dir + dest_name)
   print('combined all')
 
 
@@ -160,6 +168,28 @@ def combine_labels(first_src, second_src, dest_file):
   print('combined labels shape', combo_angles.shape)
   np.save(dest_file, combo_angles)
 
+'''
+combine left right center
+'''
+def combine_lrc_labels(first_src, second_src, dest_file):
+  first_labels = np.load(first_src)
+  second_labels = np.load(second_src)
+
+  length_of_first = first_labels.shape[0]
+  third_length_of_first = int(length_of_first / 3)
+
+  length_of_second = second_labels.shape[0]
+  third_length_of_second = int(length_of_second / 3)
+
+  center_combined = np.append(first_labels[0 : third_length_of_first], second_labels[0 : third_length_of_second], axis=0)
+  left_combined = np.append(first_labels[third_length_of_first : 2*third_length_of_first], second_labels[third_length_of_second : 2*third_length_of_second], axis=0)
+  right_combined = np.append(first_labels[2*third_length_of_first : length_of_first], second_labels[2*third_length_of_second : length_of_second], axis=0)
+  
+  cl_combo = np.append(center_combined, left_combined, axis=0)
+  combo_angles = np.append(cl_combo, right_combined, axis=0)
+  print('angle destination:', dest_file)
+  print('combined labels shape', combo_angles.shape)
+  np.save(dest_file, combo_angles)
 
 '''
 combine left, center, and right images and save to .npy file
@@ -260,22 +290,22 @@ def show_file_images(filename, img_list):
 '''
 read in 9 random images from numpy file and visualize
 '''
-def show_npfile_images_angles(src_file, labels_src):
-  fig = plt.figure()
-  img_arr = np.load(src_file)
-  labels = np.load(labels_src)
-  print('imgarr size', img_arr.shape, labels.shape)
-  #for 9 random images, print them 
-  for img_num in range(1, 10):
-    random_num = random.randint(0, img_arr.shape[0] - 1)
-    label = labels[random_num]
-    print('img num', img_num, 'image is at', random_num, 'w/ label ', label)
+# def show_npfile_images_angles(src_file, labels_src):
+#   fig = plt.figure()
+#   img_arr = np.load(src_file)
+#   labels = np.load(labels_src)
+#   print('imgarr size', img_arr.shape, labels.shape)
+#   #for 9 random images, print them 
+#   for img_num in range(1, 10):
+#     random_num = random.randint(0, img_arr.shape[0] - 1)
+#     label = labels[random_num]
+#     print('img num', img_num, 'image is at', random_num, 'w/ label ', label)
 
-    img = img_arr[random_num]
-    fig.add_subplot(3, 3, img_num)
-    plt.imshow(img)
+#     img = img_arr[random_num]
+#     fig.add_subplot(3, 3, img_num)
+#     plt.imshow(img)
   
-  plt.show()
+#   plt.show()
 
 
 '''
@@ -296,7 +326,11 @@ def show_images(img_arr):
 '''
 show images to test that flipping correct
 '''
-def show_images_angles(img_arr, img_angles):
+def show_images_angles(img_arr, img_angles, mode=0):
+  if mode == 1:
+    img_arr = np.load(img_arr)
+    img_angles = np.load(img_angles)
+
   fig = plt.figure()
   print('shape', img_arr.shape)
   
@@ -312,7 +346,11 @@ def show_images_angles(img_arr, img_angles):
 '''
 show images to test that flipping correct
 '''
-def show_lrc_images_angles(img_arr, img_angles):
+def show_lrc_images_angles(img_arr, img_angles, mode=0):
+  if mode == 1:
+    img_arr = np.load(img_arr)
+    img_angles = np.load(img_angles)
+
   third_length = int(img_arr.shape[0] / 3)
   print('third_length', third_length)
   fig = plt.figure()
@@ -320,26 +358,25 @@ def show_lrc_images_angles(img_arr, img_angles):
   for img_num in range(0, min(len(img_arr), 3)):
     rand_num = random.randint(0, third_length - 1)
 
+    l_num = third_length + rand_num
+    print('left num is ', l_num)
+    l_img = img_arr[l_num]
+    fig.add_subplot(3, 3, img_num * 3 + 1)
+    plt.title(str(round(img_angles[l_num], 2)))
+    plt.imshow(l_img)
+
     print('img num is', img_num)
     img = img_arr[rand_num]
     fig.add_subplot(3, 3, img_num * 3 + 2)
     plt.title(str(round(img_angles[rand_num], 2)))
     plt.imshow(img)
-    
+
     r_num = third_length * 2 + rand_num
     print('right num is', r_num)
     r_img = img_arr[r_num]
-    fig.add_subplot(3, 3, img_num * 3 + 1)
+    fig.add_subplot(3, 3, img_num * 3 + 3)
     plt.title(str(round(img_angles[r_num], 2)))
     plt.imshow(r_img)
-
-    l_num = third_length + rand_num
-    print('left num is ', l_num)
-    l_img = img_arr[l_num]
-    fig.add_subplot(3, 3, img_num * 3 + 3)
-    plt.title(str(round(img_angles[l_num], 2)))
-    plt.imshow(l_img)
-
 
   plt.show()
 
@@ -504,6 +541,9 @@ def change_brightness(img_arr):
   adjusted_imgs = np.delete(adjusted_imgs, 0, 0)
   return adjusted_imgs
 
+'''
+change brightness of one image
+'''
 def change_one(img):
   print('before')
   show_image(img)
@@ -732,25 +772,27 @@ if __name__ == '__main__':
   # plot_labels(np_dir + 'gc_right_recovery_angles.npy')
   #combine with non recovery info
   #combined it with uncropped and unresized info
-  # combine_images(np_dir + 'gc_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_combo_images.npy')
-  # combine_images(np_dir + 'test_combo_images.npy', np_dir + 'gc_right_recovery_images.npy', np_dir + 'gc_combo_images.npy')
+  # combine_lrc_images(np_dir + 'gc_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_combo_images.npy')
+  # combine_lrc_images(np_dir + 'test_combo_images.npy', np_dir + 'gc_right_recovery_images.npy', np_dir + 'gc_combo_images.npy')
   # combine_images(np_dir + 'gc_sr_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_wr_images.npy')
-  # combine_labels(np_dir + 'gc_sr_angles.npy', np_dir + 'gc_left_recovery_angles.npy', np_dir + 'gc_wr_angles.npy')
-  imgs = np.load(np_dir + 'test_combo_images.npy') 
-  angles = np.load(np_dir + 'gc_wr_angles.npy')
-  show_lrc_images_angles(imgs, angles)
+  # combine_lrc_labels(np_dir + 'gc_angles.npy', np_dir + 'gc_left_recovery_angles.npy', np_dir + 'gc_combo_angles.npy')
+  # combine_lrc_labels(np_dir + 'gc_combo_angles.npy', np_dir + 'gc_right_recovery_angles.npy', np_dir + 'gc_combo_angles.npy')
+  # imgs = np.load(np_dir + 'gc_combo_images.npy') 
+  # angles = np.load(np_dir + 'gc_combo_angles.npy')
+  # show_lrc_images_angles(imgs, angles)
   # plot_labels(np_dir + 'gc_wr_angles.npy')
 
   ##########################################################################################
   #crop images, print to make sure fine
-  # crop_file_images(np_dir + 'gc_wr_images.npy', np_dir + 'gc_wr_c_images.npy', 40, 135)
+  # crop_file_images(np_dir + 'gc_combo_images.npy', np_dir + 'gc_combo_c_images.npy', 40, 135)
+  # imgs = np.load(np_dir + 'gc_combo_c_images.npy') 
+  # angles = np.load(np_dir + 'gc_combo_angles.npy')
+  # show_lrc_images_angles(imgs, angles)
   # show_npfile_images_angles(np_dir + 'gc_wr_c_images.npy', np_dir + 'gc_wr_angles.npy')
  
   ##########################################################################################
   #resize them, print to make sure fine
-  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_1_images.npy', 64, 0, 2000)
-  #__________________________________________________________________________________
-  # resize_all(np_dir + 'gc_wr_c_images.npy', np_dir, 'gc_wr_r_images.npy', 64)
+  # resize_all(np_dir + 'gc_combo_c_images.npy', np_dir, 'gc_combo_r_images.npy', 64)
   # show_npfile_images_angles(np_dir + '0_2000_gc_wr_r_images.npy', np_dir + 'gc_wr_angles.npy')
 
 
@@ -773,7 +815,13 @@ if __name__ == '__main__':
   ##########################################################################################
   #combine images and show, 
   #combine is shape, prefix, dest
-  # combine_all(np_dir + 'gc_wr_images.npy', np_dir, 'gc_wr_r_images.npy', 'gc_wr_final_images.npy')
+
+  angles = np.load(np_dir + 'gc_combo_angles.npy')
+  length = angles.shape[0]
+  print('length is', length)
+  combine_all(np_dir=np_dir, img_prefix='gc_combo_r_images.npy', dest_name='gc_combo_final_images.npy', length=length)
+  imgs = np.load(np_dir + 'gc_combo_final_images.npy') 
+  show_lrc_images_angles(imgs, angles)
   # show_npfile_images_angles(np_dir + 'gc_wr_final_images.npy', np_dir + 'gc_wr_angles.npy')
 
 
