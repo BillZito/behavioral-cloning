@@ -21,18 +21,32 @@ save all images (not just center) to file
 def save_images(img_dir, dest_file):
   img_list = os.listdir(img_dir)
   img_combo = []
-  print('starting to save' + len(img_list) + 'images')
+  print('starting to save' + str(len(img_list)) + 'images')
+  c_count = 0
+  l_count = 0
+  r_count = 0
   count = 0
   for img_name in img_list:
     # can change this line to img_name.startswith('center') for center imgs
     if not img_name.startswith('.'):
+      # if img_name.startswith('center'):
+      #   print('center')
+      #   c_count += 1
+      # if img_name.startswith('left'):
+      #   print('left')
+      #   l_count += 1
+      # if img_name.startswith('right'):
+      #   print('right')
+      #   r_count += 1
       if count % 500 == 0:
         print('count is', count)
 
       img = misc.imread(img_dir + '/' + img_name)
       img_combo.append(img)
       count += 1
-
+  # print('center', c_count)
+  # print('left', l_count)
+  # print('right', r_count)
   #cast to numpy array and save to file
   all_images = np.array(img_combo)
   print('images shape', all_images.shape)
@@ -42,7 +56,7 @@ def save_images(img_dir, dest_file):
 '''
 save csv contents to a file
 '''
-def save_csv(dest_file):
+def save_csv(csv_dir, dest_file):
   reader = csv.reader(open(csv_dir), delimiter=',')
   
   # split the first value based on value right after center
@@ -94,9 +108,18 @@ def save_csv_lrc(csv_dir, dest_file):
 combine two sets of images from numpy files
 '''
 def combine_images(first_src, second_src, dest_file):
-  my_images = np.load(first_src)
-  udacity_images = np.load(second_src)
-  combined = np.append(my_images, udacity_images, axis=0)
+  first_imgs = np.load(first_src)
+  length_of_first = first_imgs.shape[0]
+  third_length_of_first = int(length_of_first / 3)
+  second_imgs = np.load(second_src) 
+  length_of_second = second_imgs.shape[0]
+  third_length_of_second = int(length_of_second / 3)
+
+  center_combined = np.append(first_imgs[0 : third_length_of_first], second_imgs[0 : third_length_of_second], axis=0)
+  left_combined = np.append(first_imgs[third_length_of_first : 2*third_length_of_first], second_imgs[third_length_of_second : 2*third_length_of_second], axis=0)
+  right_combined = np.append(first_imgs[2*third_length_of_first : length_of_first], second_imgs[2*third_length_of_second : length_of_second], axis=0)
+  cl_combo = np.append(center_combined, left_combined, axis=0)
+  combined = np.append(cl_combo, right_combined, axis=0)
   print('img destination:', dest_file)
   print('combined images shape', combined.shape)
   np.save(dest_file, combined)
@@ -262,7 +285,7 @@ def show_images(img_arr):
   fig = plt.figure()
   print('shape', img_arr.shape)
   
-  for img_num in range(1, min(len(img_arr), 9)):
+  for img_num in range(1, min(len(img_arr), 10)):
     print('img num is', img_num)
     img = img_arr[img_num]
     fig.add_subplot(3, 3, img_num)
@@ -270,6 +293,55 @@ def show_images(img_arr):
 
   plt.show()
 
+'''
+show images to test that flipping correct
+'''
+def show_images_angles(img_arr, img_angles):
+  fig = plt.figure()
+  print('shape', img_arr.shape)
+  
+  for img_num in range(1, min(len(img_arr), 10)):
+    print('img num is', img_num)
+    img = img_arr[img_num]
+    fig.add_subplot(3, 3, img_num)
+    plt.title(round(img_angles[img_num], 2))
+    plt.imshow(img)
+
+  plt.show()
+
+'''
+show images to test that flipping correct
+'''
+def show_lrc_images_angles(img_arr, img_angles):
+  third_length = int(img_arr.shape[0] / 3)
+  print('third_length', third_length)
+  fig = plt.figure()
+  
+  for img_num in range(0, min(len(img_arr), 3)):
+    rand_num = random.randint(0, third_length - 1)
+
+    print('img num is', img_num)
+    img = img_arr[rand_num]
+    fig.add_subplot(3, 3, img_num * 3 + 2)
+    plt.title(str(round(img_angles[rand_num], 2)))
+    plt.imshow(img)
+    
+    r_num = third_length * 2 + rand_num
+    print('right num is', r_num)
+    r_img = img_arr[r_num]
+    fig.add_subplot(3, 3, img_num * 3 + 1)
+    plt.title(str(round(img_angles[r_num], 2)))
+    plt.imshow(r_img)
+
+    l_num = third_length + rand_num
+    print('left num is ', l_num)
+    l_img = img_arr[l_num]
+    fig.add_subplot(3, 3, img_num * 3 + 3)
+    plt.title(str(round(img_angles[l_num], 2)))
+    plt.imshow(l_img)
+
+
+  plt.show()
 
 '''
 show a single image
@@ -413,11 +485,18 @@ def change_brightness(img_arr):
   adjusted_imgs = np.array([img_arr[0]])
   for img_num in range(0, len(img_arr)):
     img = img_arr[img_num]
+    # print('array access')
+    # show_image(img)
     hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV) 
+    # print('rgb2hsv')
+    # show_image(hsv)
     rando = np.random.uniform()
     # print('rando is', rando)
-    hsv[:,:, 2] = hsv[:,:, 2].astype('float64') * (.25 + rando)
+    hsv[:,:, 2] = hsv[:,:, 2] * (.25 + rando)
+    
     new_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+    # print('hsv2rgb')
+    # show_image(new_img)
     # new_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2RGB)
     # show_images(img.reshape((1,) + img.shape), new_img.reshape((1,) + new_img.shape))
     adjusted_imgs = np.append(adjusted_imgs, new_img.reshape((1,) + new_img.shape), axis=0)
@@ -425,6 +504,19 @@ def change_brightness(img_arr):
   adjusted_imgs = np.delete(adjusted_imgs, 0, 0)
   return adjusted_imgs
 
+def change_one(img):
+  print('before')
+  show_image(img)
+  hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV) 
+  print('rgb2hsv')
+  show_image(hsv)
+  rando = np.random.uniform()
+  # print('rando is', rando)
+  hsv[:,:, 2] = hsv[:,:, 2] * (.25 + rando)
+  
+  new_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+  print('hsv2rgb')
+  show_image(new_img)
 
 '''
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
@@ -552,13 +644,13 @@ def translate(X, y):
   # for each image
   for img_num in range(X.shape[0]):
     # get a random number between 0 and 1/5 of width of image
-    random_num = random.randint(-75, 75)
+    random_num = random.randint(-16, 16)
     # change image by random num
     t_image = translate_image(X[img_num], random_num)
     # append image to new image set
     translated_images = np.append(translated_images, t_image.reshape((1,) + t_image.shape), axis=0)
     # change angle by random num * .002
-    translation = random_num * .00266
+    translation = random_num * .0106
     new_val = y[img_num] + translation
     # print('random num', random_num, 'translation', translation, 'prev val', y[img_num], 'new val', new_val)
     # show_image(t_image)
@@ -586,24 +678,36 @@ def translate_image(old_img, amount):
 
 
 if __name__ == '__main__':
-  img_dir = 'data/images/IMG'
-  csv_dir = 'data/images/driving_log.csv'
+  img_dir = 'data/images/gc_left_recovery_IMG'
+  csv_dir = 'data/images/gc_left_recovery_driving_log.csv'
   np_dir = 'data/np_data/'
 
-  #test resize
+  #test show images
+  # save_images(img_dir, np_dir + 'testme.npy')
+  # imgs = np.load(np_dir + 'gc_right_recovery_images.npy') 
+  # angles = np.load(np_dir + 'gc_right_recovery_angles.npy')
+  # show_lrc_images_angles(imgs, angles)
+  # plot_labels(np_dir + 'gc_right_recovery_angles.npy')
+
 
   ##########################################################################################
   #test translation
-  # show_npfile_images_angles(np_dir + 'gc_images.npy', np_dir + 'gc_angles.npy')
-  imgs = np.load(np_dir + 'gc_images.npy') 
-  angles = np.load(np_dir + 'gc_angles.npy')
+  # b_imgs = change_brightness(imgs[3000:3056])
+  # augment_brightness_camera_images(imgs[0])
+  # augment_brightness_camera_images(imgs[10])
+  # augment_brightness_camera_images(imgs[100])
+  # augment_brightness_camera_images(imgs[1000])
+  # augment_brightness_camera_images(imgs[8000])
+  # show_images(b_imgs)
   # first 100 images of combo show the car apparently...
-  t_imgs, t_angles = translate(imgs[8000:8256], angles[8000:8256])
-  c_imgs = crop_images(t_imgs, 40, 135)
-  print('c shape', c_imgs.shape)
-  resized = resize_images(c_imgs, 64, 64, 256)
-  print('resized shape', resized.shape)
-  # show_images(resized)
+  # half_flip_X, half_flip_y = flip_half(imgs[8000:8056], angles[8000:8056])
+
+  # t_imgs, t_angles = translate(half_flip_X, half_flip_y)
+  # c_imgs = crop_images(t_imgs, 40, 135)
+  # print('c shape', c_imgs.shape)
+  # resized = resize_images(c_imgs, 64, 64, 256)
+  # print('resized shape', resized.shape)
+  # show_images(b_imgs)
 
   # np.save(np_dir + 'gc_test_angles.npy', t_angles)
   # np.save(np_dir + 'gc_test_images.npy', t_imgs)
@@ -612,32 +716,42 @@ if __name__ == '__main__':
 
   ##########################################################################################
   # for each img in norm and correct, save it to .npy
-  # save_images(img_dir, np_dir + 'gc_images.npy')
+  # save_images(img_dir, np_dir + 'gc_left_recovery_images.npy')
   ##########################################################################################  
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
-  # save_csv_lrc(csv_dir, np_dir + 'gc_angles.npy')
-  # show_npfile_images_angles(np_dir + 'gc_images.npy', np_dir + 'gc_angles.npy')
-  # plot_labels(np_dir + 'gc_angles.npy')
+  # left_angles_dir = np_dir + 'gc_left_recovery_angles.npy'
+  # left_images_dir = np_dir + 'gc_left_recovery_images.npy'
+  # save_csv(csv_dir, left_angles_dir)
+  # plot_labels(left_angles_dir)
+  
+  # imgs = np.load(left_images_dir) 
+  # angles = np.load(left_angles_dir)
+  # show_lrc_images_angles(imgs, angles)
 
+  # plot_labels(np_dir + 'gc_right_recovery_angles.npy')
+  #combine with non recovery info
+  #combined it with uncropped and unresized info
+  # combine_images(np_dir + 'gc_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_combo_images.npy')
+  # combine_images(np_dir + 'test_combo_images.npy', np_dir + 'gc_right_recovery_images.npy', np_dir + 'gc_combo_images.npy')
+  # combine_images(np_dir + 'gc_sr_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_wr_images.npy')
+  # combine_labels(np_dir + 'gc_sr_angles.npy', np_dir + 'gc_left_recovery_angles.npy', np_dir + 'gc_wr_angles.npy')
+  imgs = np.load(np_dir + 'test_combo_images.npy') 
+  angles = np.load(np_dir + 'gc_wr_angles.npy')
+  show_lrc_images_angles(imgs, angles)
+  # plot_labels(np_dir + 'gc_wr_angles.npy')
 
   ##########################################################################################
   #crop images, print to make sure fine
-  # crop_file_images(np_dir + 'gc_images.npy', np_dir + 'gc_c_images.npy', 40, 135)
-  # show_npfile_images_angles(np_dir + 'gc_c_images.npy', np_dir + 'gc_angles.npy')
+  # crop_file_images(np_dir + 'gc_wr_images.npy', np_dir + 'gc_wr_c_images.npy', 40, 135)
+  # show_npfile_images_angles(np_dir + 'gc_wr_c_images.npy', np_dir + 'gc_wr_angles.npy')
  
   ##########################################################################################
   #resize them, print to make sure fine
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_1_images.npy', 64, 0, 2000)
-  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_2_images.npy', 64, 2000, 4000)
-  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_3_images.npy', 64, 4000, 7000)
-  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
-  # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   #__________________________________________________________________________________
-  # resize_all(np_dir + 'gc_c_images.npy', np_dir, 'gc_r_images.npy', 64)
-  # show_npfile_images_angles(np_dir + '0_2000_gc_r_images.npy', np_dir + 'gc_angles.npy')
-  # show_npfile_images_angles(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
-
+  # resize_all(np_dir + 'gc_wr_c_images.npy', np_dir, 'gc_wr_r_images.npy', 64)
+  # show_npfile_images_angles(np_dir + '0_2000_gc_wr_r_images.npy', np_dir + 'gc_wr_angles.npy')
 
 
   ##########################################################################################
@@ -658,8 +772,9 @@ if __name__ == '__main__':
 
   ##########################################################################################
   #combine images and show, 
-  # combine_all(np_dir + 'gc_images.npy', np_dir, 'gc_r_images.npy', 'gc_final_images.npy')
-  # show_npfile_images_angles(np_dir + 'gc_final_images.npy', np_dir + 'gc_angles.npy')
+  #combine is shape, prefix, dest
+  # combine_all(np_dir + 'gc_wr_images.npy', np_dir, 'gc_wr_r_images.npy', 'gc_wr_final_images.npy')
+  # show_npfile_images_angles(np_dir + 'gc_wr_final_images.npy', np_dir + 'gc_wr_angles.npy')
 
 
   ##########################################################################################
