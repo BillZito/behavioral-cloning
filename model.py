@@ -36,9 +36,11 @@ def make_model():
   #normalize pixels from 255 to be out of 1
   model.add(Lambda(lambda x: x / 255. - .5, input_shape=(start_shape), output_shape=(start_shape)))
 
+  #new
   model.add(Convolution2D(3, 1, 1, subsample=(2, 2), border_mode='same'))
   model.add(ELU())
 
+  #changed to smaller kernel size and smaller subsampling (images smaller)
   #convolutional 16, 8, 8 with subsample aka stridelength (4, 4), same padding means that it doesn't lose part on end? 
   model.add(Convolution2D(16, 3, 3, subsample=(2, 2), border_mode='same'))
 
@@ -61,6 +63,7 @@ def make_model():
   model.add(Dropout(.5))
   model.add(ELU())
 
+  #new 
   model.add(Dense(50))
   model.add(Dropout(.3))
   model.add(ELU())
@@ -240,26 +243,26 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # print('x after while', new_X.shape[0])
 
       half_flip_X, half_flip_y = flip_half(new_X, new_y)
-      brightness_adjusted_X = change_brightness(half_flip_X)
-      translated_X, translated_y = translate(brightness_adjusted_X, half_flip_y)
+      translated_X, translated_y = translate(half_flip_X, half_flip_y)
+      brightness_adjusted_X = change_brightness(translated_X)
+      cropped_X = crop_images(translated_X, 40, 135)
+      resized_X = resize_images(cropped_X, 64, 64, batch_size)
+      # translated_X, translated_y = translate(brightness_adjusted_X, half_flip_y)
       # half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
-      # cropped_imgs = crop_images(brightness_adjusted_imgs, 60, 140)
-      # resized_imgs = resize_images(cropped_imgs, 64, 64)
-      # curr_epoch += 1
-      # yield (brightness_adjusted_imgs, half_flip_y)
+      yield (resized_X, half_flip_y)
       # yield(half_flip_X, half_flip_y)
       # yield(new_X, new_y)
-      yield(translated_X, translated_y)
+      # yield(translated_X, translated_y)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=8, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=9, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'u_lrc_combo_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'u_lrc_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_69', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'gc_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'gc_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_81', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -283,6 +286,7 @@ if __name__ == "__main__":
   '''
   top_val = 1
   model = make_model()
+
   for i in range(args.epoch):
     print('epoch ', i)
     norm_threshold = 100 * 1.0/(1 + i)
@@ -292,11 +296,12 @@ if __name__ == "__main__":
       samples_per_epoch=args.epochsize,
       validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
       nb_val_samples=800)
-    epoch = i + 1
     
-    model.save_weights(epoch + _ + args.destfile + '.h5', True)
+    epoch = str(i + 1)
+    
+    model.save_weights(args.destfile + '_' + epoch +'.h5', True)
   # save weights as json
-    with open(epoch + _ + args.destfile + '.json', 'w') as outfile: 
+    with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
       json.dump(model.to_json(), outfile)
     # print('score is', score.history)
     curr_val = score.history['val_loss'][0]

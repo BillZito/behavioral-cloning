@@ -21,7 +21,7 @@ save all images (not just center) to file
 def save_images(img_dir, dest_file):
   img_list = os.listdir(img_dir)
   img_combo = []
-
+  print('starting to save' + len(img_list) + 'images')
   count = 0
   for img_name in img_list:
     # can change this line to img_name.startswith('center') for center imgs
@@ -262,14 +262,11 @@ def show_images(img_arr):
   fig = plt.figure()
   print('shape', img_arr.shape)
   
-  for img_num in range(0, min(len(img_arr), 3)):
+  for img_num in range(1, min(len(img_arr), 9)):
     print('img num is', img_num)
     img = img_arr[img_num]
-    fig.add_subplot(3, 3, img_num * 2 + 1)
+    fig.add_subplot(3, 3, img_num)
     plt.imshow(img)
-    # flipped_img = flipped_arr[img_num]
-    # fig.add_subplot(3, 3, img_num * 2 + 2)
-    # plt.imshow(flipped_img)
 
   plt.show()
 
@@ -555,14 +552,16 @@ def translate(X, y):
   # for each image
   for img_num in range(X.shape[0]):
     # get a random number between 0 and 1/5 of width of image
-    random_num = random.randint(-10, 10)
+    random_num = random.randint(-75, 75)
     # change image by random num
     t_image = translate_image(X[img_num], random_num)
     # append image to new image set
     translated_images = np.append(translated_images, t_image.reshape((1,) + t_image.shape), axis=0)
     # change angle by random num * .002
-    translation = random_num * .002
+    translation = random_num * .00266
     new_val = y[img_num] + translation
+    # print('random num', random_num, 'translation', translation, 'prev val', y[img_num], 'new val', new_val)
+    # show_image(t_image)
     # append new angles
     translated_labels.append(new_val)
 
@@ -591,29 +590,41 @@ if __name__ == '__main__':
   csv_dir = 'data/images/driving_log.csv'
   np_dir = 'data/np_data/'
 
+  #test resize
+
+  ##########################################################################################
   #test translation
-  imgs = np.load(np_dir + 'u_lrc_combo_images.npy') 
-  angles = np.load(np_dir + 'u_lrc_angles.npy')
+  # show_npfile_images_angles(np_dir + 'gc_images.npy', np_dir + 'gc_angles.npy')
+  imgs = np.load(np_dir + 'gc_images.npy') 
+  angles = np.load(np_dir + 'gc_angles.npy')
   # first 100 images of combo show the car apparently...
-  t_imgs, t_angles = translate(imgs[24100:24150], angles[600:700])
-  # np.save(np_dir + 'test_angles.npy', t_angles)
-  # np.save(np_dir + 'test_images.npy', t_imgs)
-  # show_npfile_images_angles(np_dir + 'test_images.npy', np_dir + 'test_angles.npy')
+  t_imgs, t_angles = translate(imgs[8000:8256], angles[8000:8256])
+  c_imgs = crop_images(t_imgs, 40, 135)
+  print('c shape', c_imgs.shape)
+  resized = resize_images(c_imgs, 64, 64, 256)
+  print('resized shape', resized.shape)
+  # show_images(resized)
+
+  # np.save(np_dir + 'gc_test_angles.npy', t_angles)
+  # np.save(np_dir + 'gc_test_images.npy', t_imgs)
+  # show_npfile_images_angles(np_dir + 'gc_test_images.npy', np_dir + 'gc_test_angles.npy')
+
+
   ##########################################################################################
   # for each img in norm and correct, save it to .npy
-  # save_images(img_dir, np_dir + '4laps_images.npy')
+  # save_images(img_dir, np_dir + 'gc_images.npy')
   ##########################################################################################  
   #save all angles--for all left images, save driving logs as -.25
   # for all right, save as +.25
-  # save_csv_lrc(csv_dir, np_dir + '4laps_angles.npy')
-  # show_npfile_images_angles(np_dir + '4laps_images.npy', np_dir + 'lrc_angles.npy')
-  # plot_labels(np_dir + '4laps_angles.npy')
+  # save_csv_lrc(csv_dir, np_dir + 'gc_angles.npy')
+  # show_npfile_images_angles(np_dir + 'gc_images.npy', np_dir + 'gc_angles.npy')
+  # plot_labels(np_dir + 'gc_angles.npy')
 
 
   ##########################################################################################
   #crop images, print to make sure fine
-  # crop_file_images(np_dir + '4laps_images.npy', np_dir + '4laps_c_images.npy', 30, 140)
-  # show_npfile_images_angles(np_dir + '4laps_c_images.npy', np_dir + '4laps_angles.npy')
+  # crop_file_images(np_dir + 'gc_images.npy', np_dir + 'gc_c_images.npy', 40, 135)
+  # show_npfile_images_angles(np_dir + 'gc_c_images.npy', np_dir + 'gc_angles.npy')
  
   ##########################################################################################
   #resize them, print to make sure fine
@@ -623,8 +634,8 @@ if __name__ == '__main__':
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_4_images.npy', 64, 7000, 15000)
   # resize_file_images(np_dir + 'c_lrc_images.npy', np_dir + 'c_lrc_5_images.npy', 64, 15000)
   #__________________________________________________________________________________
-  # resize_all(np_dir + '4laps_c_images.npy', np_dir, '4laps_r_images.npy', 64)
-  # show_npfile_images_angles(np_dir + '0_2000_4laps_r_images.npy', np_dir + '4laps_angles.npy')
+  # resize_all(np_dir + 'gc_c_images.npy', np_dir, 'gc_r_images.npy', 64)
+  # show_npfile_images_angles(np_dir + '0_2000_gc_r_images.npy', np_dir + 'gc_angles.npy')
   # show_npfile_images_angles(np_dir + '8000_8036_udacity_r_images.npy', np_dir + 'udacity_angles.npy')
 
 
@@ -647,8 +658,8 @@ if __name__ == '__main__':
 
   ##########################################################################################
   #combine images and show, 
-  # combine_all(np_dir + '4laps_images.npy', np_dir, '4laps_r_images.npy', '4laps_final_images.npy')
-  # show_npfile_images_angles(np_dir + '4laps_final_images.npy', np_dir + '4laps_angles.npy')
+  # combine_all(np_dir + 'gc_images.npy', np_dir, 'gc_r_images.npy', 'gc_final_images.npy')
+  # show_npfile_images_angles(np_dir + 'gc_final_images.npy', np_dir + 'gc_angles.npy')
 
 
   ##########################################################################################
