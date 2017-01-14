@@ -592,10 +592,10 @@ if __name__ == '__main__':
   np_dir = 'data/np_data/'
 
   #test translation
-  # imgs = np.load(np_dir + 'u_lrc_combo_images.npy')
-  # angles = np.load(np_dir + 'u_lrc_angles.npy')
+  imgs = np.load(np_dir + 'u_lrc_combo_images.npy') 
+  angles = np.load(np_dir + 'u_lrc_angles.npy')
   # first 100 images of combo show the car apparently...
-  # t_imgs, t_angles = translate(imgs[24100:24150], angles[600:700])
+  t_imgs, t_angles = translate(imgs[24100:24150], angles[600:700])
   # np.save(np_dir + 'test_angles.npy', t_angles)
   # np.save(np_dir + 'test_images.npy', t_imgs)
   # show_npfile_images_angles(np_dir + 'test_images.npy', np_dir + 'test_angles.npy')
@@ -647,8 +647,8 @@ if __name__ == '__main__':
 
   ##########################################################################################
   #combine images and show, 
-  combine_all(np_dir + '4laps_images.npy', np_dir, '4laps_r_images.npy', '4laps_final_images.npy')
-  show_npfile_images_angles(np_dir + '4laps_final_images.npy', np_dir + '4laps_angles.npy')
+  # combine_all(np_dir + '4laps_images.npy', np_dir, '4laps_r_images.npy', '4laps_final_images.npy')
+  # show_npfile_images_angles(np_dir + '4laps_final_images.npy', np_dir + '4laps_angles.npy')
 
 
   ##########################################################################################
