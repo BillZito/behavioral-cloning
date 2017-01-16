@@ -73,7 +73,7 @@ def save_csv(csv_dir, dest_file):
 '''
 save csv with left and right
 '''
-def save_csv_lrc(csv_dir, dest_file):
+def save_csv_lrc(csv_dir, dest_file, correction):
   reader = csv.reader(open(csv_dir), delimiter=',')
   
   # split the first value based on value right after center
@@ -86,7 +86,7 @@ def save_csv_lrc(csv_dir, dest_file):
   #left (based on order of images in logs)
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader:
-    steering_angle = float(row[3]) + .25
+    steering_angle = float(row[3]) + correction
     # print('steering angle is', steering_angle)
     all_angles.append(steering_angle)
   print('done with left', len(all_angles))
@@ -94,7 +94,7 @@ def save_csv_lrc(csv_dir, dest_file):
   #right
   reader = csv.reader(open(csv_dir), delimiter=',')
   for row in reader: 
-    steering_angle = float(row[3]) - .25
+    steering_angle = float(row[3]) - correction
     all_angles.append(steering_angle)
 
   np_angles = np.array(all_angles)
@@ -718,10 +718,39 @@ def translate_image(old_img, amount):
 
 
 if __name__ == '__main__':
-  img_dir = 'data/images/gc_left_recovery_IMG'
-  csv_dir = 'data/images/gc_left_recovery_driving_log.csv'
+  img_dir = 'data/images/udacity_IMG'
+  csv_dir = 'data/logs/udacity_driving_log.csv'
   np_dir = 'data/np_data/'
 
+  ##########################################################################################
+  # test workflow
+  #1. make logs array of all csv logs
+  save_csv_lrc(csv_dir, np_dir + 'udacity_test_angles.npy', .3)
+  plot_labels(left_angles_dir)
+  #2. crop 20 pixels from each side of image
+  #check
+  #3. resize to 32, 16
+  #check
+  #4. getting the first hsv value, whatever that is
+  #check
+  #5. loads data, adding .3 to left and sub .3 from right
+  #check
+  #don't do below
+  #6. load it all into data object (features/labels)
+  #7. double data by flipping it
+  #do in initial move
+  #8. shuffle and train/testsplit .1
+  #9. shape now 48k images, 16, 32
+  #check
+  #10. ...reshape with a +1 at end (for color spectrum?) 
+  #check
+  #11. make super tiny model-- one convo, one maxpool, one dense
+  #read over twice
+  #12. compile with mse and adam
+  #13. get ten epochs-- loss goes from .155 to .040 and val .052-035
+  #woot
+
+  ##########################################################################################
   #test show images
   # save_images(img_dir, np_dir + 'testme.npy')
   # imgs = np.load(np_dir + 'gc_right_recovery_images.npy') 
@@ -762,7 +791,7 @@ if __name__ == '__main__':
   # for all right, save as +.25
   # left_angles_dir = np_dir + 'gc_left_recovery_angles.npy'
   # left_images_dir = np_dir + 'gc_left_recovery_images.npy'
-  # save_csv(csv_dir, left_angles_dir)
+  # save_csv_lrc(csv_dir, np_dir + 'gc_lrc_dampened_left_angles.npy', .1)
   # plot_labels(left_angles_dir)
   
   # imgs = np.load(left_images_dir) 
@@ -775,12 +804,12 @@ if __name__ == '__main__':
   # combine_lrc_images(np_dir + 'gc_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_combo_images.npy')
   # combine_lrc_images(np_dir + 'test_combo_images.npy', np_dir + 'gc_right_recovery_images.npy', np_dir + 'gc_combo_images.npy')
   # combine_images(np_dir + 'gc_sr_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_wr_images.npy')
-  # combine_lrc_labels(np_dir + 'gc_angles.npy', np_dir + 'gc_left_recovery_angles.npy', np_dir + 'gc_combo_angles.npy')
-  # combine_lrc_labels(np_dir + 'gc_combo_angles.npy', np_dir + 'gc_right_recovery_angles.npy', np_dir + 'gc_combo_angles.npy')
-  # imgs = np.load(np_dir + 'gc_combo_images.npy') 
-  # angles = np.load(np_dir + 'gc_combo_angles.npy')
+  # combine_lrc_labels(np_dir + 'gc_lrc_dampened_angles.npy', np_dir + 'gc_lrc_dampened_left_angles.npy', np_dir + 'gc_dampened_combo_angles.npy')
+  # combine_lrc_labels(np_dir + 'gc_dampened_combo_angles.npy', np_dir + 'gc_lrc_dampened_right_angles.npy', np_dir + 'gc_dampened_combo_angles.npy')
+  # imgs = np.load(np_dir + 'gc_combo_final_images.npy') 
+  # angles = np.load(np_dir + 'gc_dampened_combo_angles.npy')
   # show_lrc_images_angles(imgs, angles)
-  # plot_labels(np_dir + 'gc_wr_angles.npy')
+  # # plot_labels(np_dir + 'gc_wr_angles.npy')
 
   ##########################################################################################
   #crop images, print to make sure fine
@@ -816,12 +845,12 @@ if __name__ == '__main__':
   #combine images and show, 
   #combine is shape, prefix, dest
 
-  angles = np.load(np_dir + 'gc_combo_angles.npy')
-  length = angles.shape[0]
-  print('length is', length)
-  combine_all(np_dir=np_dir, img_prefix='gc_combo_r_images.npy', dest_name='gc_combo_final_images.npy', length=length)
-  imgs = np.load(np_dir + 'gc_combo_final_images.npy') 
-  show_lrc_images_angles(imgs, angles)
+  # angles = np.load(np_dir + 'gc_combo_angles.npy')
+  # length = angles.shape[0]
+  # print('length is', length)
+  # combine_all(np_dir=np_dir, img_prefix='gc_combo_r_images.npy', dest_name='gc_combo_final_images.npy', length=length)
+  # imgs = np.load(np_dir + 'gc_combo_final_images.npy') 
+  # show_lrc_images_angles(imgs, angles)
   # show_npfile_images_angles(np_dir + 'gc_wr_final_images.npy', np_dir + 'gc_wr_angles.npy')
 
 

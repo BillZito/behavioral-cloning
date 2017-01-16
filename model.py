@@ -250,9 +250,9 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # translated_X, translated_y = translate(brightness_adjusted_X, half_flip_y)
       # half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
       # yield(translated_X, translated_y)
-      yield (brightness_adjusted_X, half_flip_y)
+      # yield (translated_X, translated_y)
       # yield(half_flip_X, half_flip_y)
-      # yield(new_X, new_y)
+      yield(brightness_adjusted_X, half_flip_y)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
@@ -260,9 +260,9 @@ if __name__ == "__main__":
   parser.add_argument('--epoch', type=int, default=9, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'gc_wr_final_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'gc_wr_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_88', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'gc_combo_final_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'gc_combo_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_94', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -285,7 +285,7 @@ if __name__ == "__main__":
   fit model to generated data
   '''
   top_val = 1
-  model = get_model()
+  model = make_model()
 
   for i in range(args.epoch):
     print('epoch ', i)
