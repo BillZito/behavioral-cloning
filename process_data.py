@@ -741,7 +741,7 @@ if __name__ == '__main__':
   # plot_labels(np_dir + 'udacity_angles.npy')
 
   # #3. resize images to 40-80 (no color change for now) and combine
-  resize_all(np_dir + 'udacity_images.npy', np_dir, 'udacity_r_images.npy', 100, 33)
+  resize_all(np_dir + 'udacity_images.npy', np_dir, 'udacity_r_images.npy', 200, 66)
   angles = np.load(np_dir + 'udacity_test_angles.npy')
   length = angles.shape[0]
   combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_final_images.npy', length=length)

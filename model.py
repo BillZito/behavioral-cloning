@@ -12,6 +12,7 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from keras.optimizers import Adam
 from keras.models import Sequential
+from keras.models import model_from_json
 from keras.callbacks import EarlyStopping
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Convolution2D, Conv2D, ELU, Flatten, Dense, Dropout, Lambda, Activation, MaxPooling2D
@@ -24,28 +25,56 @@ model_dir = 'models/'
 '''
 '''
 def nvidia_model():
-  row, col, depth = 33, 100, 3
+  row, col, depth = 66, 200, 3
   model = Sequential()
-  model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(row, col, depth), output_shape=(row, col, depth)))
+  model.add(Lambda(lambda x: x/255 - .5, input_shape=(row, col, depth), output_shape=(row, col, depth)))
   
   #valid border mode should get rid of a couple each way, whereas same keeps
   model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
-  # model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
+  model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
   model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
   model.add(Convolution2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'))
-  model.add(Convolution2D(64, 3, 3, subsample=(1, 1), border_mode='same', activation='relu'))
+  model.add(Convolution2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'))
 
   model.add(Flatten())
+  model.add(Dropout(.5))
   model.add(Dense(100))
+  ######
+  #consider adding elu between dense layers
   #my guess at what's right
-  model.add(Dropout(.3))
   model.add(Dense(50))
   #and again
-  model.add(Dropout(.3))
-  model.add(Dense(10))
+  # model.add(Dropout(.3))
+  # model.add(Dense(10))
   model.add(Dense(1))
 
   #compile and return
+  model.compile(loss='mse', optimizer='adam')
+  model.summary()
+  return model
+
+def comma_model():
+  row, col, depth = 66, 200, 3
+  shape = (row, col, depth)
+
+  model = Sequential()
+
+  model.add(Lambda(lambda x: x/255 -.5, input_shape=shape, output_shape=shape))
+  model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode='same', activation='elu'))
+  model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode='same', activation='elu'))
+  model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode='same'))
+
+  model.add(Flatten())
+  model.add(Dropout(.2))
+  model.add(ELU())
+  model.add(Dropout(.5))
+  model.add(ELU())
+
+  #the fully connected layer accounts for huge % of parameters (50+)
+  model.add(Dense(200))
+  model.add(Dense(100))
+  model.add(Dense(1))
+
   model.compile(loss='mse', optimizer='adam')
   model.summary()
   return model
@@ -105,22 +134,22 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # cropped_X = crop_images(translated_X, 40, 135)
       # resized_X = resize_images(cropped_X, 64, 64, batch_size)
       # translated_X, translated_y = translate(brightness_adjusted_X, half_flip_y)
-      # half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
+      half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
       # yield(translated_X, translated_y)
       # yield (translated_X, translated_y)
-      # yield(half_flip_X, half_flip_y)
+      yield(half_flip_X, half_flip_y)
       # yield(brightness_adjusted_X, half_flip_y)
-      yield X[start:end], y[start:end]
+      # yield X[start:end], y[start:end]
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=10, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=5, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=43394, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'udacity_final_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_2', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_3', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -133,8 +162,8 @@ if __name__ == "__main__":
   double data for mini-model tessting
   python docs say ::-1 should read it backwards--- doesnt make sense how that would reverse image
   '''
-  orig_features = np.append(orig_features, orig_features[:, :,::-1], axis=0)
-  orig_labels = np.append(orig_labels, -orig_labels, axis=0)
+  # orig_features = np.append(orig_features, orig_features[:, :,::-1], axis=0)
+  # orig_labels = np.append(orig_labels, -orig_labels, axis=0)
 
   '''
   split into training, validation, and set to right type
@@ -145,6 +174,7 @@ if __name__ == "__main__":
   print('X_val shape', X_val.shape)
 
   '''
+  model = comma_model()
   for minimodel: give depth of 1 (when only convert it to image.. but still at 3 for my data)
   '''
   # X_train = X_train.reshape(X_train.shape + (1,))
@@ -157,24 +187,34 @@ if __name__ == "__main__":
   # fit model to generated data
   # '''
   top_val = 1
-  model = nvidia_model()
-  history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
-  # for i in range(args.epoch):
-  #   print('epoch ', i)
-  #   norm_threshold = 100 * 1.0/(1 + i)
-  #   score = model.fit_generator(
-  #     my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=norm_threshold),
-  #     nb_epoch=1, 
-  #     samples_per_epoch=args.epochsize,
-  #     validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
-  #     nb_val_samples=800)
+  # model = nvidia_model()
+
+  with open('models/nvidia_3_15.json', 'r') as jfile:
+        model = model_from_json(json.load(jfile))
+
+  model.compile("adam", "mse")
+  #weights file doesnt exist yet... google this
+  weights_file = 'models/nvidia_3_15.h5'
+  #load weights into model
+  model.load_weights(weights_file)
+
+  # history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
+  for i in range(16, 16 + args.epoch):
+    print('epoch ', i)
+    norm_threshold = 100 * 1.0/(1 + i)
+    score = model.fit_generator(
+      my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=norm_threshold),
+      nb_epoch=1, 
+      samples_per_epoch=args.epochsize,
+      validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
+      nb_val_samples=800)
     
-  #   epoch = str(i + 1)
-  epoch = '10'
-  model.save_weights(args.destfile + '_' + epoch +'.h5', True)
-# save weights as json
-  with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
-    json.dump(model.to_json(), outfile)
+    epoch = str(i + 1)
+  # epoch = '10'
+    model.save_weights(args.destfile + '_' + epoch +'.h5', True)
+  # save weights as json
+    with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
+      json.dump(model.to_json(), outfile)
   # print('score is', score.history)
   # curr_val = score.history['val_loss'][0]
   # if curr_val < top_val:

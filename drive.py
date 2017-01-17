@@ -1,25 +1,26 @@
-import argparse
+import cv2
 import base64
 import json
-
-import numpy as np
+import time
+import argparse
 import socketio
 import eventlet
+import numpy as np
 import eventlet.wsgi
-import time
 from PIL import Image
-from PIL import ImageOps
-from flask import Flask, render_template
 from io import BytesIO
+from PIL import ImageOps
+import matplotlib.pyplot as plt
+from flask import Flask, render_template
 
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
-import cv2
 
 # Fix error with Keras and TensorFlow
 import tensorflow as tf
 tf.python.control_flow_ops = tf
 from process_data import show_image
+
 
 
 sio = socketio.Server()
@@ -46,16 +47,19 @@ def telemetry(sid, data):
     # print('transofrmed size', transformed_image_array.shape)
     
     # preprocessing
-    resized = cv2.resize(image_array, (100, 33))
+    resized = cv2.resize(image_array, (200, 66))
     resized = resized.reshape((1,) + resized.shape)
     # resized = ( cv2.resize((cv2.cvtColor(image_array[0], cv2.COLOR_RGB2HSV))[:,:,1],(32,16))).reshape(1,16,32,1)
     # resized = cv2.resize(cv2.cvtColor(image_array, cv2.COLOR_RGB2HSV)[:, :,1], (32, 16))
     # resized = resized.reshape((1,) + resized.shape + (1,))
-    print('resized shape', resized.shape)
+    # print('resized shape', resized.shape)
+    # plt.imshow(resized)
+    # plt.show()
     # show_image(resized)
-    
+    # 
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(resized, batch_size=1))
+    # steering_angle = steering_angle * 1.4
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
     throttle = 0.2
     print(steering_angle, throttle)
