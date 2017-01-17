@@ -26,7 +26,6 @@ prev_image_array = None
 #and therefore sid and data are based in by processor
 @sio.on('telemetry')
 def telemetry(sid, data):
-    print('tel called')
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
@@ -48,20 +47,21 @@ def telemetry(sid, data):
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
     # show_image(image_array)
-    image_array = image_array[40:135]
+    # image_array = image_array[20:140]
     # show_image(image_array)
     # resize to 64, 64 and put in shape [1, 64, 64, 3] for model prediction
-    image_array = cv2.resize(image_array, (64, 64))
+    image_array = cv2.resize(cv2.cvtColor(image_array, cv2.COLOR_RGB2HSV)[:, :, :1], (32, 16))
     # show_image(image_array)
-    image_array = np.array([image_array])
-    # show_images(image_array)
+    # image_array = np.array([image_array])
+    image_array = image_array.reshape((1,) + image_array.shape + (1,))
+    # show_image(image_array)
 
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(image_array, batch_size=1))
     # if abs(steering_angle) > .1:
     steering_angle = steering_angle * 1
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = .3
+    throttle = .2
     print('new steering angle is', steering_angle)
     send_control(steering_angle, throttle)
 

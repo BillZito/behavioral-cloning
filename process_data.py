@@ -21,7 +21,7 @@ save all images (not just center) to file
 def save_images(img_dir, dest_file):
   img_list = os.listdir(img_dir)
   img_combo = []
-  print('starting to save' + str(len(img_list)) + 'images')
+  print('starting to save ' + str(len(img_list)) + ' images')
   c_count = 0
   l_count = 0
   r_count = 0
@@ -30,13 +30,10 @@ def save_images(img_dir, dest_file):
     # can change this line to img_name.startswith('center') for center imgs
     if not img_name.startswith('.'):
       # if img_name.startswith('center'):
-      #   print('center')
       #   c_count += 1
       # if img_name.startswith('left'):
-      #   print('left')
       #   l_count += 1
       # if img_name.startswith('right'):
-      #   print('right')
       #   r_count += 1
       if count % 500 == 0:
         print('count is', count)
@@ -363,20 +360,20 @@ def show_lrc_images_angles(img_arr, img_angles, mode=0):
     l_img = img_arr[l_num]
     fig.add_subplot(3, 3, img_num * 3 + 1)
     plt.title(str(round(img_angles[l_num], 2)))
-    plt.imshow(l_img)
+    plt.imshow(l_img, cmap='gray')
 
     print('img num is', img_num)
     img = img_arr[rand_num]
     fig.add_subplot(3, 3, img_num * 3 + 2)
     plt.title(str(round(img_angles[rand_num], 2)))
-    plt.imshow(img)
+    plt.imshow(img, cmap='gray')
 
     r_num = third_length * 2 + rand_num
     print('right num is', r_num)
     r_img = img_arr[r_num]
     fig.add_subplot(3, 3, img_num * 3 + 3)
     plt.title(str(round(img_angles[r_num], 2)))
-    plt.imshow(r_img)
+    plt.imshow(r_img, cmap='gray')
 
   plt.show()
 
@@ -584,7 +581,7 @@ def resize_images(img_arr, width, height, end=2000):
 resize given images to 64x64-- reducing fidelity improves model speed and performance?
 (from file)
 '''
-def resize_file_images(img_src, dest_file, size, start=0, end=0):
+def resize_file_images(img_src, dest_file, width, height, start=0, end=0):
   # print('started')
   img_arr = np.load(img_src)
   # print('resized_imgs shape', resized_imgs.shape)
@@ -597,7 +594,10 @@ def resize_file_images(img_src, dest_file, size, start=0, end=0):
       print('index is', i)
 
     img = img_arr[i]
-    resized = cv2.resize(img, (size, size))
+    ################################################################################
+    #remove the color change when dont want that
+    resized = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2HSV)[:, :, 1], (width, height))
+    # cv2.resize((cv2.cvtColor(img, cv2.COLOR_RGB2HSV))[:,:,1],(32,16))
     resized = resized.reshape((1,) + resized.shape)
 
     if i == start:
@@ -613,21 +613,21 @@ def resize_file_images(img_src, dest_file, size, start=0, end=0):
 for every 2000 images, resize and save
 unfortunately doesnt do the last 100 messages because less than 2000
 '''
-def resize_all(src_file, np_dir, dest_name, size):
+def resize_all(src_file, np_dir, dest_name, width, height):
   imgs = np.load(src_file)
   end = imgs.shape[0]
   last_start = 0
 
   for i in range(2000, end, 2000):
     print('resizing to', np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, 'range', last_start, i)
-    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, size, last_start, i)
+    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(i) + '_' + dest_name, width, height, last_start, i)
     last_start = i
 
   #combine last set
   print('end is ', end, 'last start is', last_start)
   if (end - last_start != 2000):
     print('resizing to', np_dir + str(last_start) + '_' + str(end) + '_' + dest_name, 'range', last_start, end)
-    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(end) + '_' + dest_name, size, last_start, end)
+    resize_file_images(src_file, np_dir + str(last_start) + '_' + str(end) + '_' + dest_name, width, height, last_start, end)
   print('resized all')
 
 
@@ -725,20 +725,32 @@ if __name__ == '__main__':
   ##########################################################################################
   # test workflow
   #1. make logs array of all csv logs
-  save_csv_lrc(csv_dir, np_dir + 'udacity_test_angles.npy', .3)
-  plot_labels(left_angles_dir)
+  # save_csv_lrc(csv_dir, np_dir + 'udacity_test_angles.npy', .3)
+  # plot_labels(np_dir + 'udacity_test_angles.npy')
+  #1.25. loads data, adding .3 to left and sub .3 from right
+  #1.5 save images and check
+  # save_images(img_dir, np_dir + 'udacity_test_images.npy')
+  # show_lrc_images_angles(np_dir + 'udacity_test_images.npy', np_dir + 'udacity_test_angles.npy', 1)
   #2. crop 20 pixels from each side of image
-  #check
+  # crop_file_images(np_dir + 'udacity_test_images.npy', np_dir + 'udacity_test_c_images.npy', 20, 140)
+  # show_lrc_images_angles(np_dir + 'udacity_test_c_images.npy', np_dir + 'udacity_test_angles.npy', 1)
   #3. resize to 32, 16
-  #check
   #4. getting the first hsv value, whatever that is
-  #check
-  #5. loads data, adding .3 to left and sub .3 from right
-  #check
+  # resize_all(np_dir + 'udacity_test_images.npy', np_dir, 'udacity_test_r_images.npy', 32, 16)
+
+  #4.5 combine all
+  # angles = np.load(np_dir + 'udacity_test_angles.npy')
+  # length = angles.shape[0]
+  # combine_all(np_dir=np_dir, img_prefix='udacity_test_r_images.npy', dest_name='udacity_test_combo_images.npy', length=length)
+  show_lrc_images_angles(np_dir + 'udacity_test_combo_images.npy', np_dir + 'udacity_test_angles.npy', 1)
+
   #don't do below
   #6. load it all into data object (features/labels)
+  
   #7. double data by flipping it
+  ######################################################
   #do in initial move
+  
   #8. shuffle and train/testsplit .1
   #9. shape now 48k images, 16, 32
   #check

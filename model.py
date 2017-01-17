@@ -14,7 +14,7 @@ from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from keras.layers.normalization import BatchNormalization
-from keras.layers import Convolution2D, ELU, Flatten, Dense, Dropout, Lambda, Activation, MaxPooling2D
+from keras.layers import Convolution2D, Conv2D, ELU, Flatten, Dense, Dropout, Lambda, Activation, MaxPooling2D
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 from process_data import crop_images, resize_images, show_images, change_brightness, flip_half, flip_X, flip_y, translate
 
@@ -192,13 +192,23 @@ def get_model():
 
     return model
         
-
+def mini_model():
+  model = Sequential()
+  model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(16, 32, 1)))
+  model.add(Conv2D(2, 3, 3, border_mode='valid', input_shape=(16, 32, 1), activation='relu'))
+  model.add(MaxPooling2D((4, 4), (4, 4), 'valid'))
+  model.add(Dropout(0.25))
+  model.add(Flatten())
+  model.add(Dense(1))
+  model.summary()
+  model.compile(loss='mean_squared_error', optimizer='adam')
+  return model
 '''
 add in validation generator
 '''
 def val_generator(X, y, batch_size, num_per_epoch):
   while True:
-    X, y = shuffle(X, y)
+    # X, y = shuffle(X, y)
     smaller = min(len(X), num_per_epoch)
     iterations = int(smaller/batch_size)
     for i in range(iterations):
@@ -210,14 +220,14 @@ create generator to create augmented images
 '''
 def my_generator(X, y, batch_size, num_per_epoch, n_t):
 
-  print('norm thresh', n_t)
+  # print('norm thresh', n_t)
   #preprocess image
 
   # curr_epoch += 1
   # print('curr epoch', epoch)
 
   while True:
-    X, y = shuffle(X, y)
+    # X, y = shuffle(X, y)
     # print('range is', int(num_per_epoch/batch_size))
     smaller = min(len(X), num_per_epoch)
     iterations = int(smaller/batch_size)
@@ -225,26 +235,26 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       start, end = i * batch_size, (i + 1) * batch_size
 
       # make x/y have only a certain amount of 0's by checking y vals
-      count = 1
-      new_y = y[start].reshape((1,) + y[start].shape)
-      new_X = X[start].reshape((1,) + X[start].shape)
-      while new_y.shape[0] < batch_size:
-        random_int = random.randint(1, 100)
-        y_val = y[count % y.shape[0]]
-        # print('y val is', y_val)
-        if abs(y_val) > 0 or random_int > n_t:
-          # if random_int < 28 + 8 * epoch
-          next_y = np.array([y[count % y.shape[0]]])
-          next_X = np.array([X[count % X.shape[0]]])
-          new_y = np.append(new_y, next_y, axis=0)
-          new_X = np.append(new_X, next_X, axis=0)
-        count += 1
+      # count = 1
+      # new_y = y[start].reshape((1,) + y[start].shape)
+      # new_X = X[start].reshape((1,) + X[start].shape)
+      # while new_y.shape[0] < batch_size:
+      #   random_int = random.randint(1, 100)
+      #   y_val = y[count % y.shape[0]]
+      #   # print('y val is', y_val)
+      #   if abs(y_val) > 0 or random_int > n_t:
+      #     # if random_int < 28 + 8 * epoch
+      #     next_y = np.array([y[count % y.shape[0]]])
+      #     next_X = np.array([X[count % X.shape[0]]])
+      #     new_y = np.append(new_y, next_y, axis=0)
+      #     new_X = np.append(new_X, next_X, axis=0)
+      #   count += 1
       # print('y after while', new_y.shape[0])
       # print('x after while', new_X.shape[0])
 
-      half_flip_X, half_flip_y = flip_half(new_X, new_y)
+      # half_flip_X, half_flip_y = flip_half(new_X, new_y)
       # translated_X, translated_y = translate(half_flip_X, half_flip_y)
-      brightness_adjusted_X = change_brightness(half_flip_X)
+      # brightness_adjusted_X = change_brightness(half_flip_X)
       # cropped_X = crop_images(translated_X, 40, 135)
       # resized_X = resize_images(cropped_X, 64, 64, batch_size)
       # translated_X, translated_y = translate(brightness_adjusted_X, half_flip_y)
@@ -252,40 +262,54 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # yield(translated_X, translated_y)
       # yield (translated_X, translated_y)
       # yield(half_flip_X, half_flip_y)
-      yield(brightness_adjusted_X, half_flip_y)
+      # yield(brightness_adjusted_X, half_flip_y)
+      yield X[start:end], y[start:end]
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
-  parser.add_argument('--batch', type=int, default=256, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=9, help='Number of epochs.')
-  parser.add_argument('--epochsize', type=int, default=20000, help='How many images per epoch.')
+  parser.add_argument('--batch', type=int, default=128, help='Batch size.')
+  parser.add_argument('--epoch', type=int, default=15, help='Number of epochs.')
+  parser.add_argument('--epochsize', type=int, default=43394, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'gc_combo_final_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'gc_combo_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_94', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'udacity_test_combo_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_test_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_100', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
   args = parser.parse_args()
 
-  orig_features = np.load(args.features)
-  orig_labels = np.load(args.labels)
+  orig_features = np.load(args.features).astype(np.float)
+  orig_labels = np.load(args.labels).astype(np.float)
 
+  '''
+  double data for mini-model tessting
+  '''
+  #python docs say ::-1 should read it backwards--- doesnt make sense how that would reverse image
+  orig_features = np.append(orig_features, orig_features[:, :,::-1], axis=0)
+  orig_labels = np.append(orig_labels, -orig_labels, axis=0)
   '''
   split into training, validation, and set to right type
   '''
+  orig_features, orig_labels = shuffle(orig_features, orig_labels)
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
-  y_train = y_train.astype(np.float)
-  y_val = y_val.astype(np.float)
   print('X_train and y_train', X_train.shape, y_train.shape)
+  print('X_val shape', X_val.shape)
 
-  # will have to change early stopping to make it work with my unique model
-  earlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=1, mode='auto')
   '''
-  fit model to generated data
+  only for minimodel testing
   '''
+  X_train = X_train.reshape(X_train.shape + (1,))
+  X_val = X_val.reshape(X_val.shape + (1,))
+  print('reshaped', X_train.shape, X_val.shape)
+
+  # # will have to change early stopping to make it work with my unique model
+  # earlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=1, mode='auto')
+  # '''
+  # fit model to generated data
+  # '''
   top_val = 1
-  model = make_model()
+  model = mini_model()
 
   for i in range(args.epoch):
     print('epoch ', i)
