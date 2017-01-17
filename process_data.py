@@ -596,7 +596,8 @@ def resize_file_images(img_src, dest_file, width, height, start=0, end=0):
     img = img_arr[i]
     ################################################################################
     #remove the color change when dont want that
-    resized = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2HSV)[:, :, 1], (width, height))
+    resized = cv2.resize(img, (width, height))
+    # resized = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2HSV)[:, :, 1], (width, height))
     # cv2.resize((cv2.cvtColor(img, cv2.COLOR_RGB2HSV))[:,:,1],(32,16))
     resized = resized.reshape((1,) + resized.shape)
 
@@ -723,156 +724,28 @@ if __name__ == '__main__':
   np_dir = 'data/np_data/'
 
   ##########################################################################################
-  # test workflow
-  #1. make logs array of all csv logs
-  # save_csv_lrc(csv_dir, np_dir + 'udacity_test_angles.npy', .3)
-  # plot_labels(np_dir + 'udacity_test_angles.npy')
-  #1.25. loads data, adding .3 to left and sub .3 from right
-  #1.5 save images and check
-  # save_images(img_dir, np_dir + 'udacity_test_images.npy')
-  # show_lrc_images_angles(np_dir + 'udacity_test_images.npy', np_dir + 'udacity_test_angles.npy', 1)
-  #2. crop 20 pixels from each side of image
-  # crop_file_images(np_dir + 'udacity_test_images.npy', np_dir + 'udacity_test_c_images.npy', 20, 140)
-  # show_lrc_images_angles(np_dir + 'udacity_test_c_images.npy', np_dir + 'udacity_test_angles.npy', 1)
-  #3. resize to 32, 16
-  #4. getting the first hsv value, whatever that is
-  # resize_all(np_dir + 'udacity_test_images.npy', np_dir, 'udacity_test_r_images.npy', 32, 16)
+  '''
+  my workflow
+  1. load in images
+  2. load in lrc with .3 diff
+  3. resize images to 40-80 (no color change for now)
+  '''
+  # #1. load in images
+  # save_images(img_dir, np_dir + 'udacity_images.npy')
 
-  #4.5 combine all
-  # angles = np.load(np_dir + 'udacity_test_angles.npy')
-  # length = angles.shape[0]
-  # combine_all(np_dir=np_dir, img_prefix='udacity_test_r_images.npy', dest_name='udacity_test_combo_images.npy', length=length)
-  show_lrc_images_angles(np_dir + 'udacity_test_combo_images.npy', np_dir + 'udacity_test_angles.npy', 1)
+  # #2. load in lrc with .3 diff
+  # save_csv_lrc(csv_dir, np_dir + 'udacity_angles.npy', .3)
 
-  #don't do below
-  #6. load it all into data object (features/labels)
-  
-  #7. double data by flipping it
-  ######################################################
-  #do in initial move
-  
-  #8. shuffle and train/testsplit .1
-  #9. shape now 48k images, 16, 32
-  #check
-  #10. ...reshape with a +1 at end (for color spectrum?) 
-  #check
-  #11. make super tiny model-- one convo, one maxpool, one dense
-  #read over twice
-  #12. compile with mse and adam
-  #13. get ten epochs-- loss goes from .155 to .040 and val .052-035
-  #woot
+  # #visualize
+  # show_lrc_images_angles(img_arr=np_dir + 'udacity_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
+  # plot_labels(np_dir + 'udacity_angles.npy')
 
-  ##########################################################################################
-  #test show images
-  # save_images(img_dir, np_dir + 'testme.npy')
-  # imgs = np.load(np_dir + 'gc_right_recovery_images.npy') 
-  # angles = np.load(np_dir + 'gc_right_recovery_angles.npy')
-  # show_lrc_images_angles(imgs, angles)
-  # plot_labels(np_dir + 'gc_right_recovery_angles.npy')
+  # #3. resize images to 40-80 (no color change for now) and combine
+  resize_all(np_dir + 'udacity_images.npy', np_dir, 'udacity_r_images.npy', 100, 33)
+  angles = np.load(np_dir + 'udacity_test_angles.npy')
+  length = angles.shape[0]
+  combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_final_images.npy', length=length)
 
-
-  ##########################################################################################
-  #test translation
-  # b_imgs = change_brightness(imgs[3000:3056])
-  # augment_brightness_camera_images(imgs[0])
-  # augment_brightness_camera_images(imgs[10])
-  # augment_brightness_camera_images(imgs[100])
-  # augment_brightness_camera_images(imgs[1000])
-  # augment_brightness_camera_images(imgs[8000])
-  # show_images(b_imgs)
-  # first 100 images of combo show the car apparently...
-  # half_flip_X, half_flip_y = flip_half(imgs[8000:8056], angles[8000:8056])
-
-  # t_imgs, t_angles = translate(half_flip_X, half_flip_y)
-  # c_imgs = crop_images(t_imgs, 40, 135)
-  # print('c shape', c_imgs.shape)
-  # resized = resize_images(c_imgs, 64, 64, 256)
-  # print('resized shape', resized.shape)
-  # show_images(b_imgs)
-
-  # np.save(np_dir + 'gc_test_angles.npy', t_angles)
-  # np.save(np_dir + 'gc_test_images.npy', t_imgs)
-  # show_npfile_images_angles(np_dir + 'gc_test_images.npy', np_dir + 'gc_test_angles.npy')
-
-
-  ##########################################################################################
-  # for each img in norm and correct, save it to .npy
-  # save_images(img_dir, np_dir + 'gc_left_recovery_images.npy')
-  ##########################################################################################  
-  #save all angles--for all left images, save driving logs as -.25
-  # for all right, save as +.25
-  # left_angles_dir = np_dir + 'gc_left_recovery_angles.npy'
-  # left_images_dir = np_dir + 'gc_left_recovery_images.npy'
-  # save_csv_lrc(csv_dir, np_dir + 'gc_lrc_dampened_left_angles.npy', .1)
-  # plot_labels(left_angles_dir)
-  
-  # imgs = np.load(left_images_dir) 
-  # angles = np.load(left_angles_dir)
-  # show_lrc_images_angles(imgs, angles)
-
-  # plot_labels(np_dir + 'gc_right_recovery_angles.npy')
-  #combine with non recovery info
-  #combined it with uncropped and unresized info
-  # combine_lrc_images(np_dir + 'gc_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_combo_images.npy')
-  # combine_lrc_images(np_dir + 'test_combo_images.npy', np_dir + 'gc_right_recovery_images.npy', np_dir + 'gc_combo_images.npy')
-  # combine_images(np_dir + 'gc_sr_images.npy', np_dir + 'gc_left_recovery_images.npy', np_dir + 'gc_wr_images.npy')
-  # combine_lrc_labels(np_dir + 'gc_lrc_dampened_angles.npy', np_dir + 'gc_lrc_dampened_left_angles.npy', np_dir + 'gc_dampened_combo_angles.npy')
-  # combine_lrc_labels(np_dir + 'gc_dampened_combo_angles.npy', np_dir + 'gc_lrc_dampened_right_angles.npy', np_dir + 'gc_dampened_combo_angles.npy')
-  # imgs = np.load(np_dir + 'gc_combo_final_images.npy') 
-  # angles = np.load(np_dir + 'gc_dampened_combo_angles.npy')
-  # show_lrc_images_angles(imgs, angles)
-  # # plot_labels(np_dir + 'gc_wr_angles.npy')
-
-  ##########################################################################################
-  #crop images, print to make sure fine
-  # crop_file_images(np_dir + 'gc_combo_images.npy', np_dir + 'gc_combo_c_images.npy', 40, 135)
-  # imgs = np.load(np_dir + 'gc_combo_c_images.npy') 
-  # angles = np.load(np_dir + 'gc_combo_angles.npy')
-  # show_lrc_images_angles(imgs, angles)
-  # show_npfile_images_angles(np_dir + 'gc_wr_c_images.npy', np_dir + 'gc_wr_angles.npy')
- 
-  ##########################################################################################
-  #resize them, print to make sure fine
-  # resize_all(np_dir + 'gc_combo_c_images.npy', np_dir, 'gc_combo_r_images.npy', 64)
-  # show_npfile_images_angles(np_dir + '0_2000_gc_wr_r_images.npy', np_dir + 'gc_wr_angles.npy')
-
-
-  ##########################################################################################
-  #DONT DO THIS PART____________________________________________________________________________________________
-  #normalize images and csv and show
-  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_1_images.npy', np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_1_images.npy', 0)
-  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_2_images.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_n_lrc_2_images.npy', 2000)
-  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_3_images.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_n_lrc_3_images.npy', 4000)
-  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_4_images.npy', np_dir + '2_n_lrc_4_angles.npy', np_dir + '2_n_lrc_4_images.npy', 7000)
-  # zero_normalize(np_dir + '2_lrc_angles.npy', np_dir + 'c_lrc_5_images.npy', np_dir + '2_n_lrc_5_angles.npy', np_dir + '2_n_lrc_5_images.npy', 15000)
-  # show_npfile_images(np_dir + '2_n_lrc_1_images.npy', np_dir + '2_n_lrc_1_images.npy')
-  # plot_labels(np_dir + '2_n_lrc_1_angles.npy')
-  # plot_labels(np_dir + '2_n_lrc_2_angles.npy')
-  # plot_labels(np_dir + '2_n_lrc_3_angles.npy')
-  # plot_labels(np_dir + '2_n_lrc_4_angles.npy')
-  # plot_labels(np_dir + '2_n_lrc_5_angles.npy')
-
-
-  ##########################################################################################
-  #combine images and show, 
-  #combine is shape, prefix, dest
-
-  # angles = np.load(np_dir + 'gc_combo_angles.npy')
-  # length = angles.shape[0]
-  # print('length is', length)
-  # combine_all(np_dir=np_dir, img_prefix='gc_combo_r_images.npy', dest_name='gc_combo_final_images.npy', length=length)
-  # imgs = np.load(np_dir + 'gc_combo_final_images.npy') 
-  # show_lrc_images_angles(imgs, angles)
-  # show_npfile_images_angles(np_dir + 'gc_wr_final_images.npy', np_dir + 'gc_wr_angles.npy')
-
-
-  ##########################################################################################
-  #DONT DO THIS PART________________________________________________________________________________
-  #combine labels and show
-  # combine_labels(np_dir + '2_n_lrc_1_angles.npy', np_dir + '2_n_lrc_2_angles.npy', np_dir + '2_lrc_combo_angles.npy')
-  # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_3_angles.npy', np_dir + '2_lrc_combo_angles.npy')
-  # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_4_angles.npy', np_dir + '2_lrc_combo_angles.npy')
-  # combine_labels(np_dir + '2_lrc_combo_angles.npy', np_dir + '2_n_lrc_5_angles.npy', np_dir + '2_lrc_combo_angles.npy')
-  # plot_labels(np_dir + '2_lrc_combo_angles.npy')
-
-  
+  # #visualize
+  show_lrc_images_angles(img_arr=np_dir + 'udacity_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
+  plot_labels(np_dir + 'udacity_angles.npy')

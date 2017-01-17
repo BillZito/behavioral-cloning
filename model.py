@@ -20,189 +20,36 @@ from process_data import crop_images, resize_images, show_images, change_brightn
 
 np_dir = 'data/np_data/'
 model_dir = 'models/'
-# curr_epoch = 1
-'''
-create a model to train the img data with
-*why need time_len = 1?
-'''
-def make_model():
-  #our data, 3 color channels, 64 by 64
-  row, col, ch = 64, 64, 3
-  start_shape = (row, col, ch)
 
-  #set up sequential linear model (stacked on top of eachother)
+'''
+'''
+def nvidia_model():
+  row, col, depth = 33, 100, 3
   model = Sequential()
+  model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(row, col, depth), output_shape=(row, col, depth)))
+  
+  #valid border mode should get rid of a couple each way, whereas same keeps
+  model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
+  # model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
+  model.add(Convolution2D(48, 5, 5, subsample=(2, 2), border_mode='valid', activation='relu'))
+  model.add(Convolution2D(64, 3, 3, subsample=(1, 1), border_mode='valid', activation='relu'))
+  model.add(Convolution2D(64, 3, 3, subsample=(1, 1), border_mode='same', activation='relu'))
 
-  #normalize pixels from 255 to be out of 1
-  model.add(Lambda(lambda x: x / 255. - .5, input_shape=(start_shape), output_shape=(start_shape)))
-
-  #new
-  model.add(Convolution2D(3, 1, 1, subsample=(2, 2), border_mode='same'))
-  model.add(ELU())
-
-  #changed to smaller kernel size and smaller subsampling (images smaller)
-  #convolutional 16, 8, 8 with subsample aka stridelength (4, 4), same padding means that it doesn't lose part on end? 
-  model.add(Convolution2D(16, 3, 3, subsample=(2, 2), border_mode='same'))
-
-  #ELU aka exponential linear unit(similar to RELU)
-  model.add(ELU())
-  model.add(Convolution2D(32, 3, 3, subsample=(2, 2), border_mode='same'))
-  model.add(ELU())
-  model.add(Convolution2D(64, 3, 3, subsample=(2, 2), border_mode='same'))
-
-  # model.add(ELU())
-  # model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode='same'))
-
-  #flatten and dropout .2
   model.add(Flatten())
-  model.add(Dropout(.2))
-  model.add(ELU())
-
-  # dense (aka normal fully connected) -- outputs to size 512 (and doesnt matter input)
-  model.add(Dense(512))
-  model.add(Dropout(.5))
-  model.add(ELU())
-
-  #new 
-  model.add(Dense(50))
+  model.add(Dense(100))
+  #my guess at what's right
   model.add(Dropout(.3))
-  model.add(ELU())
-
-  #dense 1 -- outputs to 1 and then can 1-hot it?
-  model.add(Dense(1)) 
-
-  #compile model and return. setting loss to mean standard error because regression
-  #no metrics
-  # model.summary()
-
-  adam = Adam(lr=0.0001)
-  model.compile(optimizer=adam, loss='mse')
-
-  return model
-
-def navidia():
-    nb_filters1 = 12
-    nb_filters2 = 18
-    nb_filters3 = 24
-    nb_filters4 = 36
-
-    pool_size = (2, 2)
-
-    stride1 = [1,1]
-    stride2= [2,2]
-
-    kernel_size = (3, 3)
-    kernel_size1 = (3, 3)
-
-    model = Sequential()
-
-    model.add(BatchNormalization(input_shape=(40, 160, 3)))
-
-    model.add(Convolution2D(nb_filters1, 3, 3, subsample=(1, 1), border_mode="same"))
-    model.add(Activation('relu'))
-    # model.add(Dropout(0.5))
-
-    model.add(Convolution2D(nb_filters2, 3, 3, subsample=(2, 2), border_mode="same"))
-    model.add(Activation('relu'))
-    # model.add(Dropout(0.5))
-
-    model.add(Convolution2D(nb_filters3, 3, 3, subsample=(2, 2), border_mode="same"))
-    model.add(Activation('relu'))
-    # model.add(Dropout(0.5))
-
-    model.add(Convolution2D(nb_filters4, 3, 3, subsample=(2, 2), border_mode="same"))
-    model.add(Activation('relu'))
-
-    model.add(Dropout(0.5))
-
-    model.add(Flatten())
-
-    model.add(Dense(500))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-
-    model.add(Dense(100))
-    model.add(Activation('relu'))
-
-    model.add(Dense(50))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-
-    model.add(Dense(1))
-    # model.summary()
-    
-    adam = Adam(lr=0.0001)
-    model.compile(optimizer=adam, loss='mse')
-    return model
-
-def get_model():
-    input_shape = (64, 64, 3)
-    filter_size = 3
-    pool_size = (2,2)
-    model = Sequential()
-    model.add(Lambda(lambda x: x/255.-0.5,input_shape=input_shape))
-    model.add(Convolution2D(3,1,1,
-                        border_mode='valid',
-                        name='conv0', init='he_normal'))
-    model.add(Convolution2D(32,filter_size,filter_size,
-                        border_mode='valid',
-                        name='conv1', init='he_normal'))
-    model.add(ELU())
-    model.add(Convolution2D(32,filter_size,filter_size,
-                        border_mode='valid',
-                        name='conv2', init='he_normal'))
-    model.add(ELU())
-    model.add(MaxPooling2D(pool_size=pool_size))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(64,filter_size,filter_size,
-                        border_mode='valid',
-                        name='conv3', init='he_normal'))
-    model.add(ELU())
-
-    model.add(Convolution2D(64,filter_size,filter_size,
-                        border_mode='valid',
-                        name='conv4', init='he_normal'))
-    model.add(ELU())
-    model.add(MaxPooling2D(pool_size=pool_size))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(128,filter_size,filter_size,
-                        border_mode='valid',
-                        name='conv5', init='he_normal'))
-    model.add(ELU())
-    model.add(Convolution2D(128,filter_size,filter_size,
-                        border_mode='valid',
-                        name='conv6', init='he_normal'))
-    model.add(ELU())
-    model.add(MaxPooling2D(pool_size=pool_size))
-    model.add(Dropout(0.5))
-    model.add(Flatten())
-    model.add(Dense(512,name='hidden1', init='he_normal'))
-    model.add(ELU())
-    model.add(Dropout(0.5))
-    model.add(Dense(64,name='hidden2', init='he_normal'))
-    model.add(ELU())
-    model.add(Dropout(0.5))
-    model.add(Dense(16,name='hidden3',init='he_normal'))
-    model.add(ELU())
-    model.add(Dropout(0.5))
-    model.add(Dense(1, name='output', init='he_normal'))
-
-    adam = Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    model.compile(optimizer=adam, loss='mse')
-
-    return model
-        
-def mini_model():
-  model = Sequential()
-  model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(16, 32, 1)))
-  model.add(Conv2D(2, 3, 3, border_mode='valid', input_shape=(16, 32, 1), activation='relu'))
-  model.add(MaxPooling2D((4, 4), (4, 4), 'valid'))
-  model.add(Dropout(0.25))
-  model.add(Flatten())
+  model.add(Dense(50))
+  #and again
+  model.add(Dropout(.3))
+  model.add(Dense(10))
   model.add(Dense(1))
+
+  #compile and return
+  model.compile(loss='mse', optimizer='adam')
   model.summary()
-  model.compile(loss='mean_squared_error', optimizer='adam')
   return model
+
 '''
 add in validation generator
 '''
@@ -268,12 +115,12 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=15, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=10, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=43394, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'udacity_test_combo_images.npy', help='File where features .npy found.')
-  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_test_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'generator_100', help='File where model found')
+  parser.add_argument('--features', type=str, default=np_dir + 'udacity_final_images.npy', help='File where features .npy found.')
+  parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_2', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -284,10 +131,11 @@ if __name__ == "__main__":
 
   '''
   double data for mini-model tessting
+  python docs say ::-1 should read it backwards--- doesnt make sense how that would reverse image
   '''
-  #python docs say ::-1 should read it backwards--- doesnt make sense how that would reverse image
   orig_features = np.append(orig_features, orig_features[:, :,::-1], axis=0)
   orig_labels = np.append(orig_labels, -orig_labels, axis=0)
+
   '''
   split into training, validation, and set to right type
   '''
@@ -297,11 +145,11 @@ if __name__ == "__main__":
   print('X_val shape', X_val.shape)
 
   '''
-  only for minimodel testing
+  for minimodel: give depth of 1 (when only convert it to image.. but still at 3 for my data)
   '''
-  X_train = X_train.reshape(X_train.shape + (1,))
-  X_val = X_val.reshape(X_val.shape + (1,))
-  print('reshaped', X_train.shape, X_val.shape)
+  # X_train = X_train.reshape(X_train.shape + (1,))
+  # X_val = X_val.reshape(X_val.shape + (1,))
+  # print('reshaped', X_train.shape, X_val.shape)
 
   # # will have to change early stopping to make it work with my unique model
   # earlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=1, mode='auto')
@@ -309,29 +157,29 @@ if __name__ == "__main__":
   # fit model to generated data
   # '''
   top_val = 1
-  model = mini_model()
-
-  for i in range(args.epoch):
-    print('epoch ', i)
-    norm_threshold = 100 * 1.0/(1 + i)
-    score = model.fit_generator(
-      my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=norm_threshold),
-      nb_epoch=1, 
-      samples_per_epoch=args.epochsize,
-      validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
-      nb_val_samples=800)
+  model = nvidia_model()
+  history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
+  # for i in range(args.epoch):
+  #   print('epoch ', i)
+  #   norm_threshold = 100 * 1.0/(1 + i)
+  #   score = model.fit_generator(
+  #     my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=norm_threshold),
+  #     nb_epoch=1, 
+  #     samples_per_epoch=args.epochsize,
+  #     validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
+  #     nb_val_samples=800)
     
-    epoch = str(i + 1)
-    
-    model.save_weights(args.destfile + '_' + epoch +'.h5', True)
-  # save weights as json
-    with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
-      json.dump(model.to_json(), outfile)
-    # print('score is', score.history)
-    curr_val = score.history['val_loss'][0]
-    if curr_val < top_val:
-      top_val = curr_val
-      print('best score', top_val)
+  #   epoch = str(i + 1)
+  epoch = '10'
+  model.save_weights(args.destfile + '_' + epoch +'.h5', True)
+# save weights as json
+  with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
+    json.dump(model.to_json(), outfile)
+  # print('score is', score.history)
+  # curr_val = score.history['val_loss'][0]
+  # if curr_val < top_val:
+  #   top_val = curr_val
+  #   print('best score', top_val)
 
     #set high score to whatever is highest
 
