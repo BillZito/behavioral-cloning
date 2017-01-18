@@ -10,8 +10,7 @@ from sklearn.utils import shuffle
 
 '''
 ##########################################################################
-Combine images and save them to .npy file.
-Combine labels and same them .npy file.
+1. Save labels and images to .npy files
 ##########################################################################
 '''
 
@@ -21,29 +20,21 @@ save all images (not just center) to file
 def save_images(img_dir, dest_file):
   img_list = os.listdir(img_dir)
   img_combo = []
+
   print('starting to save ' + str(len(img_list)) + ' images')
-  c_count = 0
-  l_count = 0
-  r_count = 0
+
   count = 0
   for img_name in img_list:
     # can change this line to img_name.startswith('center') for center imgs
     if not img_name.startswith('.'):
-      # if img_name.startswith('center'):
-      #   c_count += 1
-      # if img_name.startswith('left'):
-      #   l_count += 1
-      # if img_name.startswith('right'):
-      #   r_count += 1
+
       if count % 500 == 0:
         print('count is', count)
 
       img = misc.imread(img_dir + '/' + img_name)
       img_combo.append(img)
       count += 1
-  # print('center', c_count)
-  # print('left', l_count)
-  # print('right', r_count)
+
   #cast to numpy array and save to file
   all_images = np.array(img_combo)
   print('images shape', all_images.shape)
@@ -118,6 +109,7 @@ def combine_lrc_images(first_src, second_src, dest_file):
   first_imgs = np.load(first_src)
   length_of_first = first_imgs.shape[0]
   third_length_of_first = int(length_of_first / 3)
+
   second_imgs = np.load(second_src) 
   length_of_second = second_imgs.shape[0]
   third_length_of_second = int(length_of_second / 3)
@@ -125,8 +117,10 @@ def combine_lrc_images(first_src, second_src, dest_file):
   center_combined = np.append(first_imgs[0 : third_length_of_first], second_imgs[0 : third_length_of_second], axis=0)
   left_combined = np.append(first_imgs[third_length_of_first : 2*third_length_of_first], second_imgs[third_length_of_second : 2*third_length_of_second], axis=0)
   right_combined = np.append(first_imgs[2*third_length_of_first : length_of_first], second_imgs[2*third_length_of_second : length_of_second], axis=0)
+  
   cl_combo = np.append(center_combined, left_combined, axis=0)
   combined = np.append(cl_combo, right_combined, axis=0)
+  
   print('img destination:', dest_file)
   print('combined images shape', combined.shape)
   np.save(dest_file, combined)
@@ -188,72 +182,10 @@ def combine_lrc_labels(first_src, second_src, dest_file):
   print('combined labels shape', combo_angles.shape)
   np.save(dest_file, combo_angles)
 
-'''
-combine left, center, and right images and save to .npy file
-'''
-def lr_augment(src_dir, dest_file):
-  print('starting at i')
-  img_list = os.listdir(src_dir)
-
-  l_count = 0
-  # for each image, start with left and concat to center and right
-  for img_name in img_list:
-    if img_name.startswith('left'):
-      
-      img = concat(img_name, src_dir)
-      
-      #for first img, initialize concatted_imgs
-      if l_count == 0: 
-        concatted_imgs = img.reshape((1,) + img.shape)
-      elif l_count % 500 == 1:
-        #save every 500 images and then reset concatted to cur image
-        print('l_count', l_count)
-        save_concat(concatted_imgs, dest_file)
-        concatted_imgs = img.reshape((1,) + img.shape)
-      else:
-        #otherwise add another image to concatted
-        concatted_imgs = np.append(concatted_imgs, img.reshape((1,) + img.shape), axis=0)
-        if l_count % 500 == 2:
-          #remove the first image that is only there to initialize concatted
-          concatted_imgs = np.delete(concatted_imgs, 0, 0)
-
-      l_count += 1
-
-  save_concat(concatted_imgs, dest_file)
-  print('saved all imgs')
-
-
-'''
-concats left, center, and right images
-'''
-def concat(img_name, src_dir):
-  center_name = img_name.replace('left', 'center')
-  right_name = img_name.replace('left', 'right')
-
-  left_img = misc.imread(src_dir + '/' + img_name)
-  center_img = misc.imread(src_dir + '/' + center_name)
-  right_img = misc.imread(src_dir + '/' + right_name)
-
-  img = np.concatenate((left_img, center_img, right_img), axis=1)
-  return img
-
-
-'''
-saves passed in images to end of current list of concatted files
-'''
-def save_concat(concatted_imgs, dest_file):
-  try:
-    prev_images = np.load(dest_file)
-    print('found old file', prev_images.shape)
-    now_images = np.append(prev_images, concatted_imgs, axis=0)
-    np.save(dest_file, now_images)
-    print('saved new file', now_images.shape)
-  except IOError:
-    print('no images found, saving to file', concatted_imgs.shape)
-    np.save(dest_file, concatted_imgs)
 
 '''
 ##########################################################################
+2. Display images
 Show images from directoy, .npy files, and from numpy arrays
 Plot labels to see their distribution
 ##########################################################################
@@ -282,28 +214,6 @@ def show_file_images(filename, img_list):
     plt.imshow(flipped_img)
   
   plt.show()
-
-
-'''
-read in 9 random images from numpy file and visualize
-'''
-# def show_npfile_images_angles(src_file, labels_src):
-#   fig = plt.figure()
-#   img_arr = np.load(src_file)
-#   labels = np.load(labels_src)
-#   print('imgarr size', img_arr.shape, labels.shape)
-#   #for 9 random images, print them 
-#   for img_num in range(1, 10):
-#     random_num = random.randint(0, img_arr.shape[0] - 1)
-#     label = labels[random_num]
-#     print('img num', img_num, 'image is at', random_num, 'w/ label ', label)
-
-#     img = img_arr[random_num]
-#     fig.add_subplot(3, 3, img_num)
-#     plt.imshow(img)
-  
-#   plt.show()
-
 
 '''
 show images to test that flipping correct
@@ -419,9 +329,10 @@ def count_images(img_dir):
 
 '''
 ##########################################################################
--Process images to crop out unnecessary parts
--Zero-normalize labels to reduce the bias towards 0
--Flip left/right axis for images and labels (make negative)
+3. Process images
+Process images to crop out unnecessary parts
+Zero-normalize labels to reduce the bias towards 0
+Flip left/right axis for images and labels (make negative)
 ##########################################################################
 '''
 '''
@@ -704,7 +615,9 @@ def translate(X, y):
   # print('ending shape', translated_images.shape, translated_labels.shape)
   return translated_images, translated_labels
 
-  
+'''
+translate one images
+'''
 def translate_image(old_img, amount):
   # print('shape is', old_img.shape)
   rows,cols, depth = old_img.shape
@@ -740,12 +653,16 @@ if __name__ == '__main__':
   # show_lrc_images_angles(img_arr=np_dir + 'udacity_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
   # plot_labels(np_dir + 'udacity_angles.npy')
 
+  #2.5 crop off top 20 pixels from top
+  # crop_file_images(np_dir + 'udacity_images.npy', np_dir + 'udacity_cropped2_images.npy', 40, 160)
+  # show_lrc_images_angles(img_arr=np_dir + 'udacity_cropped2_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
+
   # #3. resize images to 40-80 (no color change for now) and combine
-  resize_all(np_dir + 'udacity_images.npy', np_dir, 'udacity_r_images.npy', 200, 66)
+  resize_all(np_dir + 'udacity_cropped_images.npy', np_dir, 'udacity_r_images.npy', 200, 66)
   angles = np.load(np_dir + 'udacity_test_angles.npy')
   length = angles.shape[0]
-  combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_final_images.npy', length=length)
+  combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_c_final_images.npy', length=length)
 
-  # #visualize
-  show_lrc_images_angles(img_arr=np_dir + 'udacity_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
+  # # #visualize
+  show_lrc_images_angles(img_arr=np_dir + 'udacity_c_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
   plot_labels(np_dir + 'udacity_angles.npy')
