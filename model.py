@@ -144,12 +144,12 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=5, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=15, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=43394, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'udacity_final_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_3', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'comma_1', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -174,7 +174,6 @@ if __name__ == "__main__":
   print('X_val shape', X_val.shape)
 
   '''
-  model = comma_model()
   for minimodel: give depth of 1 (when only convert it to image.. but still at 3 for my data)
   '''
   # X_train = X_train.reshape(X_train.shape + (1,))
@@ -188,18 +187,19 @@ if __name__ == "__main__":
   # '''
   top_val = 1
   # model = nvidia_model()
+  model = comma_model()
 
-  with open('models/nvidia_3_15.json', 'r') as jfile:
-        model = model_from_json(json.load(jfile))
+  # with open('models/nvidia_3_15.json', 'r') as jfile:
+  #       model = model_from_json(json.load(jfile))
 
-  model.compile("adam", "mse")
-  #weights file doesnt exist yet... google this
-  weights_file = 'models/nvidia_3_15.h5'
-  #load weights into model
-  model.load_weights(weights_file)
+  # model.compile("adam", "mse")
+  # #weights file doesnt exist yet... google this
+  # weights_file = 'models/nvidia_3_15.h5'
+  # #load weights into model
+  # model.load_weights(weights_file)
 
   # history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
-  for i in range(16, 16 + args.epoch):
+  for i in range(0,  args.epoch):
     print('epoch ', i)
     norm_threshold = 100 * 1.0/(1 + i)
     score = model.fit_generator(
