@@ -167,7 +167,7 @@ if __name__ == "__main__":
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
   parser.add_argument('--features', type=str, default=np_dir + 'udacity_final_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_7', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_32', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -207,18 +207,18 @@ if __name__ == "__main__":
   # model = comma_model()
   # model = nvidia_model()
 
-  with open('models/nvidia_6_9.json', 'r') as jfile:
+  with open('models/nvidia_3_15.json', 'r') as jfile:
     model = model_from_json(json.load(jfile))
 
-  adam = Adam(lr=.0001)
+  adam = Adam(lr=.001)
   model.compile(optimizer=adam, loss="mse")
   #weights file doesnt exist yet... google this
-  weights_file = 'models/nvidia_6_9.h5'
+  weights_file = 'models/nvidia_3_15.h5'
   #load weights into model
   model.load_weights(weights_file)
 
   # history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
-  for i in range(9, 9 + args.epoch):
+  for i in range(15, 15 + args.epoch):
     print('epoch ', i)
     norm_threshold = 100 * 1.0/(1 + i)
     score = model.fit_generator(
