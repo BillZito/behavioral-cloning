@@ -25,7 +25,7 @@ model_dir = 'models/'
 '''
 '''
 def nvidia_model():
-  row, col, depth = 66, 200, 3
+  row, col, depth = 33, 100, 3
   model = Sequential()
   # can try batchnoramlization here to make images have no 
 
@@ -39,7 +39,7 @@ def nvidia_model():
   model.add(Lambda(lambda x: x/255 - .5, input_shape=(row, col, depth), output_shape=(row, col, depth)))
   
   #valid border mode should get rid of a couple each way, whereas same keeps
-  model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid'))
+  model.add(Convolution2D(24, 5, 5, subsample=(1, 1), border_mode='valid'))
   model.add(Activation('relu'))
   model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid'))
   model.add(Activation('relu'))
@@ -54,7 +54,7 @@ def nvidia_model():
   model.add(Activation('relu'))
 
   model.add(Dense(100))
-  model.add(Dropout(.3))
+  # model.add(Dropout(.3))
   model.add(Activation('relu'))
 
   model.add(Dense(50))
@@ -162,12 +162,12 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=10, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=7, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=43394, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'udacity_final_images.npy', help='File where features .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'udacity_c1_final_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_32', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_81', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -186,6 +186,7 @@ if __name__ == "__main__":
   '''
   split into training, validation, and set to right type
   '''
+  print('images', args.features, 'labels', args.labels)
   orig_features, orig_labels = shuffle(orig_features, orig_labels)
   X_train, X_val, y_train, y_val = train_test_split(orig_features, orig_labels, test_size=.1, random_state=0)
   print('X_train and y_train', X_train.shape, y_train.shape)
@@ -207,18 +208,18 @@ if __name__ == "__main__":
   # model = comma_model()
   # model = nvidia_model()
 
-  with open('models/nvidia_3_15.json', 'r') as jfile:
+  with open('models/nvidia_8_10.json', 'r') as jfile:
     model = model_from_json(json.load(jfile))
 
-  adam = Adam(lr=.001)
+  adam = Adam(lr=.0001)
   model.compile(optimizer=adam, loss="mse")
   #weights file doesnt exist yet... google this
-  weights_file = 'models/nvidia_3_15.h5'
+  weights_file = 'models/nvidia_8_10.h5'
   #load weights into model
   model.load_weights(weights_file)
 
   # history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
-  for i in range(15, 15 + args.epoch):
+  for i in range(10, 10 + args.epoch):
     print('epoch ', i)
     norm_threshold = 100 * 1.0/(1 + i)
     score = model.fit_generator(
@@ -234,6 +235,7 @@ if __name__ == "__main__":
   # save weights as json
     with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
       json.dump(model.to_json(), outfile)
+    print('saved model as', args.destfile + '_' + epoch)
   # print('score is', score.history)
   # curr_val = score.history['val_loss'][0]
   # if curr_val < top_val:
@@ -243,8 +245,6 @@ if __name__ == "__main__":
     #set high score to whatever is highest
 
   #save the model
-  print('images', args.features, 'labels', args.labels)
-  print('saved model as', args.destfile)
 
   # model.save_weights(args.destfile + '.h5', True)
   # # save weights as json

@@ -658,11 +658,11 @@ if __name__ == '__main__':
   # show_lrc_images_angles(img_arr=np_dir + 'udacity_cropped2_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
 
   # #3. resize images to 40-80 (no color change for now) and combine
-  resize_all(np_dir + 'udacity_cropped_images.npy', np_dir, 'udacity_r_images.npy', 200, 66)
-  angles = np.load(np_dir + 'udacity_test_angles.npy')
-  length = angles.shape[0]
-  combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_c_final_images.npy', length=length)
+  # resize_all(np_dir + 'udacity_cropped_images.npy', np_dir, 'udacity_r_images.npy', 100, 33)
+  # angles = np.load(np_dir + 'udacity_test_angles.npy')
+  # length = angles.shape[0]
+  # combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_c1_final_images.npy', length=length)
 
   # # #visualize
-  show_lrc_images_angles(img_arr=np_dir + 'udacity_c_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
-  plot_labels(np_dir + 'udacity_angles.npy')
+  # show_lrc_images_angles(img_arr=np_dir + 'udacity_c1_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
+  # plot_labels(np_dir + 'udacity_angles.npy')

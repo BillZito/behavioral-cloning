@@ -45,10 +45,12 @@ def telemetry(sid, data):
     # print('image array shape', image_array.shape)
     # image_array = image_array.reshape((1,) + image_array.shape)
     # print('transofrmed size', transformed_image_array.shape)
-    
+    # image_array = image_array[20:160]
     # preprocessing
+    # show_image(image_array)
     resized = cv2.resize(image_array, (200, 66))
     # show_image(resized)
+
     resized = resized.reshape((1,) + resized.shape)
     # resized = ( cv2.resize((cv2.cvtColor(image_array[0], cv2.COLOR_RGB2HSV))[:,:,1],(32,16))).reshape(1,16,32,1)
     # resized = cv2.resize(cv2.cvtColor(image_array, cv2.COLOR_RGB2HSV)[:, :,1], (32, 16))
