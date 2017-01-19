@@ -1,6 +1,6 @@
 # The Car Drives Itself #
 
-![alt tag](./sdc1.gif)
+![alt tag](./sdc.gif)
 
 ## Overview ##
 Deep neural network to drive a car in a simulator. For a deeper look at my process, check out [my article on Medium](https://medium.com/@billzito/my-first-self-driving-car-e9cd5c04f0f2#.d4ww3vea7). 
