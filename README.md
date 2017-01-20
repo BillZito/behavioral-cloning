@@ -12,7 +12,7 @@ All made possible by Udacity's Self-driving Car Nanodegree.
 1. Used Udacity's images of a car driving on the track normally and recovering from the left and right sides
 1. The model, a mix of convolutional2d layers, relu activations, and fully connected layers, is trained for ~16 epochs on 45k training images (see model section for more details)
 1. Drive.py sends the predicted steering angle while the simulator runs
-
+1. To run the model, clone the code and run python3 drive.py successful_models/nvidia_33_17.json (python3, opencv, and tensorflow required)
 
 ## Files ##
 1. model.py - The script used to create and train the model.
