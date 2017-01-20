@@ -1,3 +1,7 @@
+'''
+Peform data processing on images and angles to prepare them for model training
+(or to aid the training process via generator)
+'''
 import os
 import csv
 import cv2
@@ -638,10 +642,10 @@ if __name__ == '__main__':
 
   ##########################################################################################
   '''
-  my workflow
+  my workflow:
   1. load in images
   2. load in lrc with .3 diff
-  3. resize images to 40-80 (no color change for now)
+  3. resize images to 200-66 (no color change for now)
   '''
   # #1. load in images
   # save_images(img_dir, np_dir + 'udacity_images.npy')
@@ -653,10 +657,6 @@ if __name__ == '__main__':
   # show_lrc_images_angles(img_arr=np_dir + 'udacity_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
   # plot_labels(np_dir + 'udacity_angles.npy')
 
-  #2.5 crop off top 20 pixels from top
-  # crop_file_images(np_dir + 'udacity_images.npy', np_dir + 'udacity_cropped2_images.npy', 40, 160)
-  # show_lrc_images_angles(img_arr=np_dir + 'udacity_cropped2_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
-
   # #3. resize images to 40-80 (no color change for now) and combine
   # resize_all(np_dir + 'udacity_cropped_images.npy', np_dir, 'udacity_r_images.npy', 100, 33)
   # angles = np.load(np_dir + 'udacity_test_angles.npy')
@@ -664,5 +664,5 @@ if __name__ == '__main__':
   # combine_all(np_dir=np_dir, img_prefix='udacity_r_images.npy', dest_name='udacity_c1_final_images.npy', length=length)
 
   # # #visualize
-  # show_lrc_images_angles(img_arr=np_dir + 'udacity_c1_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
+  # show_lrc_images_angles(img_arr=np_dir + 'udacity_final_images.npy', img_angles=np_dir + 'udacity_angles.npy', mode=1)
   # plot_labels(np_dir + 'udacity_angles.npy')

@@ -23,23 +23,18 @@ np_dir = 'data/np_data/'
 model_dir = 'models/'
 
 '''
+Recreate nvidia's deep neural network to process my images 
 '''
 def nvidia_model():
-  row, col, depth = 33, 100, 3
+  row, col, depth = 66, 200, 3
   model = Sequential()
-  # can try batchnoramlization here to make images have no 
 
-  # #1: does navidia exactly with relu, dropout of .5 before 100, change of only .2 for l/r, 15epochs of 20k at 64 items
-  # and learn rate of .00001 (smaller than mine), no flipping,
-
-  #2: kept as relu, did two layers of .3 dropout ( i think I originally did .5--let's do both .3's and a .5)
-
-  # other option(model needs extra data) worksuper aggressive 3 x dropout(.5)-- is true that more dropout has produced better results
-  # also used relu not elu--> did not work. Also did .1 l/r switch
+  # normalize image values between -.5 : .5
   model.add(Lambda(lambda x: x/255 - .5, input_shape=(row, col, depth), output_shape=(row, col, depth)))
   
   #valid border mode should get rid of a couple each way, whereas same keeps
-  model.add(Convolution2D(24, 5, 5, subsample=(1, 1), border_mode='valid'))
+  model.add(Convolution2D(24, 5, 5, subsample=(2, 2), border_mode='valid'))
+  # Use relu (non-linear activation function), not mentioned in Nvidia paper but a standard
   model.add(Activation('relu'))
   model.add(Convolution2D(36, 5, 5, subsample=(2, 2), border_mode='valid'))
   model.add(Activation('relu'))
@@ -50,6 +45,7 @@ def nvidia_model():
   model.add(Convolution2D(64, 3, 3, subsample=(1, 1), border_mode='valid'))
 
   model.add(Flatten())
+  # add in dropout of .5 (not mentioned in Nvidia paper)
   model.add(Dropout(.5))
   model.add(Activation('relu'))
 
@@ -65,11 +61,14 @@ def nvidia_model():
   
   model.add(Dense(1))
 
-  #compile and return
+  #compile with normal adam optimizer (loss .001) and return
   model.compile(loss='mse', optimizer='adam')
   model.summary()
   return model
 
+'''
+Tested the comma.ai model on Nvidia's image size. 
+'''
 def comma_model():
   row, col, depth = 66, 200, 3
   shape = (row, col, depth)
@@ -112,13 +111,17 @@ def val_generator(X, y, batch_size, num_per_epoch):
 '''
 create generator to create augmented images
 '''
-def my_generator(X, y, batch_size, num_per_epoch, n_t):
+def my_generator(X, y, batch_size, num_per_epoch):
 
+  '''
+  Images previously normalized by removing a percent of the '0' values
+  # param no longer used: , n_t
   # print('norm thresh', n_t)
   #preprocess image
 
   # curr_epoch += 1
   # print('curr epoch', epoch)
+  '''
 
   while True:
     X, y = shuffle(X, y)
@@ -128,6 +131,9 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
     for i in range(iterations):
       start, end = i * batch_size, (i + 1) * batch_size
 
+      '''
+      Data previously normalized, translated, brightness adjusted, cropped,
+      and resized inside the generator
       # make x/y have only a certain amount of 0's by checking y vals
       # count = 1
       # new_y = y[start].reshape((1,) + y[start].shape)
@@ -152,22 +158,28 @@ def my_generator(X, y, batch_size, num_per_epoch, n_t):
       # cropped_X = crop_images(translated_X, 40, 135)
       # resized_X = resize_images(cropped_X, 64, 64, batch_size)
       # translated_X, translated_y = translate(brightness_adjusted_X, half_flip_y)
-      half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
       # yield(translated_X, translated_y)
       # yield (translated_X, translated_y)
-      yield(half_flip_X, half_flip_y)
       # yield(brightness_adjusted_X, half_flip_y)
       # yield X[start:end], y[start:end]
+      '''
+      
+      '''
+      randomly flip half the images horizontally and multiply their corresponding 
+      steering angles by -1
+      '''
+      half_flip_X, half_flip_y = flip_half(X[start: end], y[start: end])
+      yield(half_flip_X, half_flip_y)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Model to train steering angles')
   parser.add_argument('--batch', type=int, default=128, help='Batch size.')
-  parser.add_argument('--epoch', type=int, default=7, help='Number of epochs.')
+  parser.add_argument('--epoch', type=int, default=5, help='Number of epochs.')
   parser.add_argument('--epochsize', type=int, default=43394, help='How many images per epoch.')
   parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='?multiple path out.')
-  parser.add_argument('--features', type=str, default=np_dir + 'udacity_c1_final_images.npy', help='File where features .npy found.')
+  parser.add_argument('--features', type=str, default=np_dir + 'udacity_final_images.npy', help='File where features .npy found.')
   parser.add_argument('--labels', type=str, default=np_dir + 'udacity_angles.npy', help='File where labels .npy found.')
-  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_81', help='File where model found')
+  parser.add_argument('--destfile', type=str, default=model_dir + 'nvidia_34', help='File where model found')
 
   parser.set_defaults(skipvalidate=False)
   parser.set_defaults(loadweights=False)
@@ -177,8 +189,7 @@ if __name__ == "__main__":
   orig_labels = np.load(args.labels).astype(np.float)
 
   '''
-  double data for mini-model tessting
-  python docs say ::-1 should read it backwards--- doesnt make sense how that would reverse image
+  double data if images small enough to be doubled here. Done in generator now
   '''
   # orig_features = np.append(orig_features, orig_features[:, :,::-1], axis=0)
   # orig_labels = np.append(orig_labels, -orig_labels, axis=0)
@@ -193,60 +204,39 @@ if __name__ == "__main__":
   print('X_val shape', X_val.shape)
 
   '''
-  for minimodel: give depth of 1 (when only convert it to image.. but still at 3 for my data)
+  fit model to generated data. Currently using the nivida model which was trained at .001 learning rate
+  and adding a couple batches at .0001 learning rate to further optimize
   '''
-  # X_train = X_train.reshape(X_train.shape + (1,))
-  # X_val = X_val.reshape(X_val.shape + (1,))
-  # print('reshaped', X_train.shape, X_val.shape)
-
-  # # will have to change early stopping to make it work with my unique model
-  # earlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=2, verbose=1, mode='auto')
-  # '''
-  # fit model to generated data
-  # '''
-  top_val = 1
   # model = comma_model()
   # model = nvidia_model()
 
-  with open('models/nvidia_8_10.json', 'r') as jfile:
+
+  with open('models/nvidia_3_15.json', 'r') as jfile:
     model = model_from_json(json.load(jfile))
 
   adam = Adam(lr=.0001)
   model.compile(optimizer=adam, loss="mse")
-  #weights file doesnt exist yet... google this
-  weights_file = 'models/nvidia_8_10.h5'
-  #load weights into model
+  weights_file = 'models/nvidia_3_15.h5'
   model.load_weights(weights_file)
 
-  # history = model.fit(X_train, y_train, batch_size=args.batch, verbose=1, validation_data=(X_val, y_val))
-  for i in range(10, 10 + args.epoch):
+  top_val = 1
+
+  '''
+  for each epoch, run the generator and save the epoch 
+  '''
+  for i in range(15, 15 + args.epoch):
     print('epoch ', i)
-    norm_threshold = 100 * 1.0/(1 + i)
+    # norm_threshold = 100 * 1.0/(1 + i)
+    # param no longer used for zero normalization: n_t=norm_threshold
     score = model.fit_generator(
-      my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize, n_t=norm_threshold),
+      my_generator(X=X_train, y=y_train, batch_size=args.batch, num_per_epoch=args.epochsize),
       nb_epoch=1, 
       samples_per_epoch=args.epochsize,
       validation_data=val_generator(X=X_val, y=y_val, batch_size=args.batch, num_per_epoch=args.epochsize),
       nb_val_samples=800)
     
     epoch = str(i + 1)
-  # epoch = '10'
     model.save_weights(args.destfile + '_' + epoch +'.h5', True)
-  # save weights as json
     with open(args.destfile + '_' + epoch + '.json', 'w') as outfile: 
       json.dump(model.to_json(), outfile)
     print('saved model as', args.destfile + '_' + epoch)
-  # print('score is', score.history)
-  # curr_val = score.history['val_loss'][0]
-  # if curr_val < top_val:
-  #   top_val = curr_val
-  #   print('best score', top_val)
-
-    #set high score to whatever is highest
-
-  #save the model
-
-  # model.save_weights(args.destfile + '.h5', True)
-  # # save weights as json
-  # with open(args.destfile + '.json', 'w') as outfile: 
-  #   json.dump(model.to_json(), outfile)
