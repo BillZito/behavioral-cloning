@@ -22,6 +22,13 @@ All made possible by Udacity's Self-driving Car Nanodegree.
 1. model.h5 - The model weights.
 1. successful_models - A list of the models and weights for models that get around the track successfully.
 
+## Methodology ##
+1. First, I tried recording my own data and adding several image processing steps with a copy of Comma.ai's model. I realized that I was trying to change too many things at once, and so tested adding one image processing step at a time until I figured out that flipping images horizontally and adding left and right camera images were two of the only steps that improved my car's driving.
+1. I created a copy of Nvidia's model based on their paper (copying their convolutional and fully connected layers almost exactly). Their model performed well with similar constraints, and was much smaller than Comma.ai's model, so I knew it would reduce the time it took me to test subsequent models. 
+1. I predicted that dropout would be necessary to prevent the model from overfitting, especially given the lower complexity of my simulator images compared to real-world images for Nvidia. I found out that a dropout of .5 worked best through guess and test.
+1. I saw that the validation score leveled off at around epoch 15, suggesting that the model was overfitting after that point, and testing epochs 10-20 found that epoch 15 performed the best (getting to the turn after the bridge).
+1. I lowered the learning rate to .0001 and trained the model for 5 more epochs, prediction that this would allow me to reduce the validation score without overfitting. The model with a couple epochs 
+1. I knew that my data was biased towards '0' steering angles, so I tried correcting by adding a 1.3x multiplier (found by guess and test) in the drive.py file to each steering angle. This allowed the car to make steeper turns. 
 
 ## Data Processing (process_data.py) ##
 Left and right camera images are saved with +.3 and -.3 steering angle changes respectively to generate more images.
